@@ -28,8 +28,7 @@ import org.midonet.midolman.state.{Ip4ToMacReplicatedMap, MacPortMap, StateAcces
 import org.midonet.util.eventloop.Reactor
 
 class ZookeeperStateStorage @Inject() (dataClient: DataClient,
-                                       @Named(StorageReactorTag)
-                                       val reactor: Reactor,
+                                       @Named(StorageReactorTag) val reactor: Reactor,
                                        val connectionWatcher:
                                            ZkConnectionAwareWatcher)
         extends StateStorage {

@@ -18,8 +18,6 @@ package org.midonet.midolman.topology
 import java.util.UUID
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
-import mockit.Mocked
-
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -35,6 +33,8 @@ import org.midonet.midolman.util.mock.MessageAccumulator
 import org.midonet.sdn.flows.FlowTagger.DeviceTag
 import org.midonet.util.functors._
 import org.midonet.util.reactivex._
+
+import mockit.Mocked
 
 @RunWith(classOf[JUnitRunner])
 class VirtualDeviceMapperTest extends MidolmanSpec {
@@ -83,6 +83,7 @@ class VirtualDeviceMapperTest extends MidolmanSpec {
 
     @Mocked
     var storage: StorageWithOwnership = _
+
     implicit var vt: VirtualTopology = _
 
     registerActors(FlowController -> (() => new FlowController
@@ -91,7 +92,7 @@ class VirtualDeviceMapperTest extends MidolmanSpec {
     def fc = FlowController.as[FlowController with MessageAccumulator]
 
     override def beforeTest(): Unit = {
-        vt = new VirtualTopology(storage, clusterDataClient, actorsService)
+        vt = injector.getInstance(classOf[VirtualTopology])
     }
 
     feature("Test the flows tags are invalidated") {

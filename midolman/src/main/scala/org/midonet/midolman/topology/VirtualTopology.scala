@@ -16,28 +16,36 @@
 package org.midonet.midolman.topology
 
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.{Executors, ConcurrentHashMap}
 
 import scala.concurrent.{Future, Promise}
 import scala.reflect._
 
 import com.google.inject.Inject
+import com.google.inject.name.Named
 
 import rx.Observable
+import rx.schedulers.Schedulers
 
 import org.midonet.cluster.DataClient
-import org.midonet.cluster.data.storage.{StorageWithOwnership, Storage}
+import org.midonet.cluster.data.storage.StorageWithOwnership
+import org.midonet.cluster.state.StateStorage
 import org.midonet.midolman.FlowController.InvalidateFlowsByTag
+import org.midonet.midolman.config.MidolmanConfig
+import org.midonet.midolman.guice.ClusterModule.StorageReactorTag
+import org.midonet.midolman.state.ZkConnectionAwareWatcher
 import org.midonet.midolman.{FlowController, NotYetException}
 import org.midonet.midolman.logging.MidolmanLogging
 import org.midonet.midolman.services.MidolmanActorsService
+import org.midonet.midolman.simulation.Bridge
 import org.midonet.midolman.topology.devices._
 import org.midonet.sdn.flows.FlowTagger.FlowTag
+import org.midonet.util.concurrent.NamedThreadFactory
+import org.midonet.util.eventloop.Reactor
 import org.midonet.util.reactivex._
 
 /**
- * This is a companion object of the
- * [[org.midonet.midolman.topology.VirtualTopology]] class, allowing the
+ * This is a companion object of the [[VirtualTopology]] class, allowing the
  * callers to query the topology using a static method call. The agent should
  * create a single instance of the class, with references to the cluster/storage
  * and the agent actor system.
@@ -57,9 +65,8 @@ object VirtualTopology extends MidolmanLogging {
     /**
      * Tries to get the virtual device with the specified identifier.
      * @return The topology device if it is found in the cache of the virtual
-     *         topology manager. The method throws a
-     *         [[org.midonet.midolman.NotYetException]] if the device is not yet
-     *         available in the cache, or an [[java.lang.Exception]] if
+     *         topology manager. The method throws a [[NotYetException]] if the
+     *         device is not yet available in the cache, or an [[Exception]] if
      *         retrieving the device failed.
      */
     @throws[NotYetException]
@@ -153,8 +160,12 @@ object VirtualTopology extends MidolmanLogging {
  * | Port/Network/RouterMapper extends DeviceMapper | (1 per device)
  * +------------------------------------------------+
  */
-class VirtualTopology @Inject() (val store: StorageWithOwnership,
+class VirtualTopology @Inject() (val config: MidolmanConfig,
+                                 val store: StorageWithOwnership,
+                                 val state: StateStorage,
                                  val dataClient: DataClient,
+                                 val connectionWatcher: ZkConnectionAwareWatcher,
+                                 @Named(StorageReactorTag) val reactor: Reactor,
                                  val actorsService: MidolmanActorsService)
         extends MidolmanLogging {
 
@@ -168,6 +179,9 @@ class VirtualTopology @Inject() (val store: StorageWithOwnership,
         new ConcurrentHashMap[UUID, Device]()
     private[topology] val observables =
         new ConcurrentHashMap[UUID, Observable[_]]()
+    private[topology] val executor = Executors.newSingleThreadExecutor(
+        new NamedThreadFactory("virtual-topology-executor"))
+    private[topology] val scheduler = Schedulers.from(executor)
 
     private val factories = Map[ClassTag[_], DeviceFactory](
         classTag[Port] -> (new PortMapper(_, this)),
@@ -175,7 +189,8 @@ class VirtualTopology @Inject() (val store: StorageWithOwnership,
         classTag[BridgePort] -> (new PortMapper(_, this)),
         classTag[VxLanPort] -> (new PortMapper(_, this)),
         classTag[TunnelZone] -> (new TunnelZoneMapper(_, this)),
-        classTag[Host] -> (new HostMapper(_, this))
+        classTag[Host] -> (new HostMapper(_, this)),
+        classTag[Bridge] -> (new BridgeMapper(_, this))
     )
 
     register(this)

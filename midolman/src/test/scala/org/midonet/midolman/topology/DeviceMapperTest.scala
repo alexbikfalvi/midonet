@@ -28,6 +28,10 @@ import rx.subjects.BehaviorSubject
 import rx.subscriptions.Subscriptions
 
 import org.midonet.cluster.data.storage.StorageWithOwnership
+import org.midonet.cluster.state.StateStorage
+import org.midonet.midolman.FlowController
+import org.midonet.midolman.FlowController.InvalidateFlowsByTag
+import org.midonet.midolman.config.MidolmanConfig
 import org.midonet.midolman.topology.VirtualTopology.Device
 import org.midonet.midolman.util.MidolmanSpec
 import org.midonet.util.functors._
@@ -77,12 +81,16 @@ class DeviceMapperTest extends MidolmanSpec {
 
     type TestableObserver = AwaitableObserver[TestableDevice]
 
+    var config: MidolmanConfig = _
     @Mocked
     var storage: StorageWithOwnership = _
+    @Mocked
+    var state: StateStorage = _
     implicit var vt: VirtualTopology = _
 
     override def beforeTest(): Unit = {
-        vt = new VirtualTopology(storage, clusterDataClient, actorsService)
+        vt = new VirtualTopology(config, storage, state, clusterDataClient,
+                                 null, null, actorsService)
     }
 
     feature("Test device observable subscription") {

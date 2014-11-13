@@ -39,12 +39,6 @@ class InMemoryStorageModule extends PrivateModule {
     import org.midonet.midolman.guice.InMemoryStorageModule._
 
     protected override def configure(): Unit = {
-
-        bind(classOf[StorageWithOwnership])
-            .toProvider(classOf[StorageProvider])
-            .asEagerSingleton()
-        expose(classOf[StorageWithOwnership])
-
         bind(classOf[Storage])
             .to(classOf[StorageWithOwnership])
             .asEagerSingleton()
