@@ -101,7 +101,6 @@ public class DefaultInterfaceDataUpdaterTest {
         Injector injector = Guice.createInjector(
             new SerializationModule(),
             new ConfigProviderModule(configuration),
-            new InMemoryStorageModule(),
             new MockFlowStateStorageModule(),
             new MockDatapathModule(),
             new MockZookeeperConnectionModule(),

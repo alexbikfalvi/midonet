@@ -38,11 +38,14 @@ class PortMapperTest extends MidolmanSpec with TopologyBuilder
 
     private var vt: VirtualTopology = _
     private implicit var store: StorageWithOwnership = _
-    private var mapper: PortMapper = _
+    private val bridgeId = UUID.randomUUID
+    private val routerId = UUID.randomUUID
 
     protected override def beforeTest(): Unit = {
         vt = injector.getInstance(classOf[VirtualTopology])
         store = injector.getInstance(classOf[StorageWithOwnership])
+        store.create(createBridge(id = bridgeId))
+        store.create(createRouter(id = routerId))
     }
 
     protected override def fillConfig(config: HierarchicalConfiguration)
@@ -78,7 +81,7 @@ class PortMapperTest extends MidolmanSpec with TopologyBuilder
             val mapper = new PortMapper(id, vt)
 
             And("A bridge port")
-            val port = createBridgePort(id = id)
+            val port = createBridgePort(id = id, bridgeId = Some(bridgeId))
 
             And("An observer to the port mapper")
             val obs = new AwaitableObserver[SimPort]
@@ -102,7 +105,7 @@ class PortMapperTest extends MidolmanSpec with TopologyBuilder
             val mapper = new PortMapper(id, vt)
 
             And("A router port")
-            val port = createRouterPort(id = id)
+            val port = createRouterPort(id = id, routerId = Some(routerId))
 
             And("An observer to the port mapper")
             val obs = new AwaitableObserver[SimPort]
@@ -152,8 +155,10 @@ class PortMapperTest extends MidolmanSpec with TopologyBuilder
             val mapper = new PortMapper(id, vt)
 
             And("A port")
-            val port1 = createBridgePort(id = id, adminStateUp = false)
-            val port2 = createBridgePort(id = id, adminStateUp = true)
+            val port1 = createBridgePort(id = id, bridgeId = Some(bridgeId),
+                                         adminStateUp = false)
+            val port2 = createBridgePort(id = id, bridgeId = Some(bridgeId),
+                                         adminStateUp = true)
 
             And("An observer to the port mapper")
             val obs = new AwaitableObserver[SimPort]
@@ -190,7 +195,7 @@ class PortMapperTest extends MidolmanSpec with TopologyBuilder
             val mapper = new PortMapper(id, vt)
 
             And("A port")
-            val port = createBridgePort(id = id)
+            val port = createBridgePort(id = id, bridgeId = Some(bridgeId))
 
             And("An observer to the port mapper")
             val obs = new AwaitableObserver[SimPort]
@@ -257,7 +262,7 @@ class PortMapperTest extends MidolmanSpec with TopologyBuilder
             val mapper = new PortMapper(id, vt)
 
             And("A port")
-            val port = createBridgePort(id = id)
+            val port = createBridgePort(id = id, bridgeId = Some(bridgeId))
 
             And("An observer to the port mapper")
             val obs = new AwaitableObserver[SimPort]
