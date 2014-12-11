@@ -119,6 +119,7 @@ abstract class VTPMRedirector extends Actor
             log.debug("Device {} has no more subscribers, trying to" +
                       " unsubscribe from the corresponding observable.", deviceId)
 
+            removeFromCache[D](deviceId)
             deviceSubscriptions.remove(deviceId) match {
                 case Some(subscription) =>
                     subscription.unsubscribe()

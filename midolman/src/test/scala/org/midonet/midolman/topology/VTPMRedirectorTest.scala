@@ -194,7 +194,8 @@ class VTPMRedirectorTest extends TestKit(ActorSystem("VTPMRedirectorTest"))
             val tunnelId = tunnel.getId
 
             When("We send a tunnel zone request")
-            vtpm.self.tell(TunnelZoneRequest(tunnelId), testActor)
+            val tzRequest = TunnelZoneRequest(tunnelId)
+            vtpm.self.tell(tzRequest, testActor)
 
             Then("We receive the tunnel zone with its members")
             val hosts = new mutable.HashSet[HostConfig]()
@@ -208,6 +209,12 @@ class VTPMRedirectorTest extends TestKit(ActorSystem("VTPMRedirectorTest"))
             } catch {
                 case e: Exception => fail("Unsubscribing from a tunnel zone should" +
                                           s" not throw exception: $e")
+            }
+
+            Then("tryAsk should result in a NotYetException as the VTPM DeviceCaches"
+                 + "should have been cleared")
+            intercept[NotYetException] {
+                VirtualToPhysicalMapper.tryAsk[ZoneMembers](tzRequest)(actorSystem)
             }
 
             And("When we update the chain")
@@ -321,7 +328,8 @@ class VTPMRedirectorTest extends TestKit(ActorSystem("VTPMRedirectorTest"))
             val protoHost = buildAndStoreHost
 
             When("We send a host request")
-            vtpm.self.tell(HostRequest(protoHost.getId), testActor)
+            val hostRequest = HostRequest(protoHost.getId)
+            vtpm.self.tell(hostRequest, testActor)
 
             Then("We receive the corresponding host")
             val simHost = ZoomConvert.fromProto(protoHost, classOf[SimHost])
@@ -334,6 +342,12 @@ class VTPMRedirectorTest extends TestKit(ActorSystem("VTPMRedirectorTest"))
             } catch {
                 case e: Exception => fail("Unsubscribing from a host should" +
                                           s" not throw exception: $e")
+            }
+
+            Then("tryAsk should result in a NotYetException as the VTPM DeviceCaches"
+                 + "should have been cleared")
+            intercept[NotYetException] {
+                VirtualToPhysicalMapper.tryAsk[SimHost](hostRequest)(actorSystem)
             }
 
             And("When we add a tunnel zone to the host")
