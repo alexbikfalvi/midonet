@@ -263,7 +263,7 @@ class HostMapperTest extends MidolmanSpec
     }
 
     private def newTunnelZone(hostId: UUID): TunnelZone = {
-        createTunnelZone(UUID.randomUUID, "foo",
+        createTunnelZone(UUID.randomUUID, TunnelZone.Type.GRE, "foo",
                          Map(hostId -> IPAddr.fromString("192.168.0.1")))
     }
 
