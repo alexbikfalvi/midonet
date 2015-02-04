@@ -21,7 +21,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import scala.collection.mutable
 
-import akka.actor.ActorSystem
 import com.google.common.annotations.VisibleForTesting
 import org.apache.zookeeper.{WatchedEvent, Watcher}
 

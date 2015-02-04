@@ -105,6 +105,7 @@ public class DefaultInterfaceDataUpdaterTest {
             new MockFlowStateStorageModule(),
             new MockDatapathModule(),
             new MockZookeeperConnectionModule(),
+            new InMemoryStorageModule(),
             new HostModule(),
             new ClusterClientModule(),
             new ClusterModule(),
