@@ -86,6 +86,7 @@ class StorageService @Inject() (directory: Directory,
                              classOf[Port], "network_id", CLEAR)
         store.declareBinding(classOf[Router], "port_ids", ERROR,
                              classOf[Port], "router_id", CLEAR)
+
         store.build()
     }
 

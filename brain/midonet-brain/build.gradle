@@ -94,11 +94,11 @@ run {
 task runTopologyZoomUpdater(type: JavaExec) {
     description = 'Run the Topology API Zoom updater app'
     classpath sourceSets.main.runtimeClasspath
-    main = "org.midonet.brain.tools.TopologyZoomUpdaterApp"
+    main = "org.midonet.brain.services.topology.TopologyZoomUpdaterApp"
     if (project.hasProperty("conf")) {
         args = [conf]
     } else {
-        args = ["conf/topology-zkupdater.conf"]
+        args = ["conf/tester.conf"]
     }
 }
 

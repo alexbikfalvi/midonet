@@ -33,7 +33,6 @@ object StorageModule {
         override def get: StorageWithOwnership =
             new ZookeeperObjectMapper(cfg.getZkRootPath + "/zoom", curator)
     }
-
 }
 
 class StorageModule extends PrivateModule {
