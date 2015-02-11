@@ -191,7 +191,7 @@ class BridgeMapperTest extends MidolmanSpec with TopologyBuilder
             store.create(port1)
 
             Then("The observer should receive the update")
-            obs.await(5 seconds, 1) shouldBe true
+            obs.await(5 seconds, 2) shouldBe true
             val device1 = obs.getOnNextEvents.get(obs.getOnNextEvents.size - 1)
             device1 shouldBeDeviceOf bridge
 
@@ -207,7 +207,8 @@ class BridgeMapperTest extends MidolmanSpec with TopologyBuilder
             store.create(port2)
 
             Then("The observer should receive the update")
-            obs.await(5 seconds, 1) shouldBe true
+            obs.await(5 seconds, 2) shouldBe true
+            Thread.sleep(1000)
             val device2 = obs.getOnNextEvents.get(obs.getOnNextEvents.size - 1)
             device2 shouldBeDeviceOf bridge
 
