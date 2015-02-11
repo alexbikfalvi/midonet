@@ -43,6 +43,7 @@ import org.midonet.midolman.guice.ClusterModule;
 import org.midonet.midolman.guice.InMemoryStorageModule;
 import org.midonet.midolman.guice.InterfaceScannerModule;
 import org.midonet.midolman.guice.ResourceProtectionModule;
+import org.midonet.midolman.guice.StateStorageModule;
 import org.midonet.midolman.guice.cluster.ClusterClientModule;
 import org.midonet.midolman.guice.config.ConfigProviderModule;
 import org.midonet.midolman.guice.datapath.MockDatapathModule;
@@ -108,6 +109,7 @@ public class DefaultInterfaceDataUpdaterTest {
             new HostModule(),
             new ClusterClientModule(),
             new ClusterModule(),
+            new StateStorageModule(),
             new MockMidolmanModule(),
             new TestableMidolmanActorsModule(
                 JavaConversions.mapAsScalaMap(new HashMap<String, TestKit>()),

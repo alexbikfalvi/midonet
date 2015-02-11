@@ -232,6 +232,7 @@ trait MidolmanTestCase extends Suite with BeforeAndAfter
             },
             new ClusterClientModule(),
             new ClusterModule(),
+            new StateStorageModule(),
             new MockMidolmanModule(),
             new TestableMidolmanActorsModule(probesByName, actorsByName, clock),
             new ResourceProtectionModule(),
