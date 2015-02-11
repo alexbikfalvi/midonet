@@ -154,8 +154,8 @@ class TopologyZoomUpdater @Inject()(val nodeContext: ClusterNode.Context,
         log.info("host1 id: " + cfg.host1Id + " host2 id: " + cfg.host2Id)
         bindPortToHostInterface(UUIDUtil.toProto(cfg.host1Id), portHost1.getId,
                                 cfg.host1Interface)
-        //bindPortToHostInterface(UUIDUtil.toProto(cfg.host2Id), portHost2.getId,
-        //                        cfg.host2Interface)
+        bindPortToHostInterface(UUIDUtil.toProto(cfg.host2Id), portHost2.getId,
+                                cfg.host2Interface)
     }
 
     private def cleanUp() = {
