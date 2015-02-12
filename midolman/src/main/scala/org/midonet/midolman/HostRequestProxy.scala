@@ -143,7 +143,7 @@ class HostRequestProxy(val hostId: UUID, val storage: FlowStateStorage,
                             lastPorts = ps
                             PacketsEntryPoint ! stateBatch
                         case Failure(e) =>
-                            log.warn("Failed to fetch state from Cassandra: {}", e)
+                            //log.warn("Failed to fetch state from Cassandra: {}", e)
                 }.andThen {
                     case _ =>
                         log.debug(s"Resolved host bindings to ${resolved.ports}")
