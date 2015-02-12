@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory
 import org.midonet.brain.{ClusterNode, ScheduledMinionConfig, ScheduledClusterMinion}
 import org.midonet.cluster.data.storage.Storage
 import org.midonet.cluster.models.Commons
-import org.midonet.cluster.models.Commons.{IPAddress, UUID}
+import org.midonet.cluster.models.Commons.{IPVersion, IPAddress, UUID}
 import org.midonet.cluster.models.Topology.Host.PortToInterface
 import org.midonet.cluster.models.Topology.TunnelZone.HostToIp
 import org.midonet.cluster.models.Topology._
@@ -175,11 +175,17 @@ class TopologyZoomUpdater @Inject()(val nodeContext: ClusterNode.Context,
         log.debug("Adding a tunnel zone with the two hosts")
         val hostToIp1 = HostToIp.newBuilder
             .setHostId(host1.getId)
-            .setIp(IPAddress.newBuilder.setAddress("10.25.25.1").build())
+            .setIp(IPAddress.newBuilder
+                       .setAddress("10.25.25.1")
+                       .setVersion(IPVersion.V4)
+                       .build())
             .build()
         val hostToIp2 = HostToIp.newBuilder
             .setHostId(host2.getId)
-            .setIp(IPAddress.newBuilder.setAddress("10.25.25.2").build())
+            .setIp(IPAddress.newBuilder
+                       .setAddress("10.25.25.2")
+                       .setVersion(IPVersion.V4)
+                       .build())
             .build()
         val tzId = UUIDUtil.randomUuidProto
         addTunnelZone(tzId, Set(hostToIp1, hostToIp2))
