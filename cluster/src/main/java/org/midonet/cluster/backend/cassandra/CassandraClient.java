@@ -131,7 +131,7 @@ public class CassandraClient {
                 CLUSTERS.put(serversStr, cluster);
 
         } catch (Exception e) {
-            log.error("Connection to Cassandra key space " + keyspaceName + " FAILED", e);
+            //log.error("Connection to Cassandra key space " + keyspaceName + " FAILED", e);
             if (this.session != null) {
                 this.session.close();
                 this.session = null;
