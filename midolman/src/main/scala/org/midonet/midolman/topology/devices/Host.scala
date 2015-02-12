@@ -85,6 +85,9 @@ class Host extends ZoomObject with Device {
         alive = isHostAlive
     }
 
+    override def toString =
+        s"Host{id=$id bindings=$portToInterface tunnelZones=$tunnelZoneIds}"
+
     override def equals(o: Any): Boolean = o match {
         case host: Host =>
             host.alive == alive &&

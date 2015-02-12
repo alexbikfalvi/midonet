@@ -114,25 +114,21 @@ class HostService extends AbstractService with HostIdProviderService
     private def identifyHostId(): Unit = {
         log.debug("Identifying host")
         val metadata = new HostMetadata
-        val builder = Host.newBuilder()
         metadata.setEpoch(epoch)
         val listAddresses = new ListBuffer[InetAddress]
         for (info <- getInterfaces) {
             listAddresses ++= info.getInetAddresses.asScala
         }
         metadata.setAddresses(listAddresses.toArray)
-        builder.addAllAddresses(listAddresses.map(_.asProto).asJava)
         try {
             metadata.setName(InetAddress.getLocalHost.getHostName)
         }
         catch {
             case e: UnknownHostException => metadata.setName("UNKNOWN")
         }
-        builder.setName(metadata.getName)
         hostId = HostIdGenerator.getHostId(hostConfig)
-        builder.setId(hostId.asProto)
         var retries: Int = hostConfig.getRetriesForUniqueHostId
-        while (!create(hostId, metadata, builder.build()) &&
+        while (!create(hostId, metadata) &&
                {retries -= 1; retries} >= 0) {
             log.warn("Host ID already in use. Waiting for it to be released.")
             Thread.sleep(hostConfig.getWaitTimeForUniqueHostId)
@@ -146,8 +142,8 @@ class HostService extends AbstractService with HostIdProviderService
 
     @throws(classOf[StateAccessException])
     @throws(classOf[SerializationException])
-    private def create(id: UUID, metadata: HostMetadata, host: Host): Boolean = {
-        createLegacy(id, metadata) && createCluster(id, host)
+    private def create(id: UUID, metadata: HostMetadata): Boolean = {
+        createLegacy(id, metadata) && createCluster(id, metadata)
     }
 
     @throws(classOf[StateAccessException])
@@ -171,16 +167,31 @@ class HostService extends AbstractService with HostIdProviderService
         true
     }
 
-    private def createCluster(id: UUID, host: Host): Boolean = {
+    private def createCluster(id: UUID, metadata: HostMetadata): Boolean = {
         if (zkConfig.isClusterStorageEnabled) {
             try {
                 // If the host entry exists
                 if (Await.result(storage.exists(classOf[Host], id), 5 seconds)) {
+                    // Read the current host.
+                    val currentHost =
+                        Await.result(storage.get(classOf[Host], id), 5 seconds)
+                    val host = currentHost.toBuilder
+                        .setName(metadata.getName)
+                        .clearAddresses()
+                        .addAllAddresses(metadata.getAddresses
+                                             .map(_.asProto).toList.asJava)
+                        .build()
                     // Try take ownership.
                     storage.updateOwner(classOf[Host], hostId, hostId, true)
                     // Update host object.
                     storage.update(host, hostId, null)
                 } else {
+                    // Create a new host.
+                    val host = Host.newBuilder()
+                        .setId(id.asProto)
+                        .setName(metadata.getName)
+                        .addAllAddresses(
+                            metadata.getAddresses.map(_.asProto).toList.asJava)
                     // Create the host object.
                     storage.create(host, hostId)
                 }
