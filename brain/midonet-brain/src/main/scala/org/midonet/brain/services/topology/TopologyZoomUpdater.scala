@@ -16,6 +16,7 @@
 
 package org.midonet.brain.services.topology
 
+import scala.collection.JavaConversions._
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
 import scala.util.Random
@@ -26,12 +27,12 @@ import org.slf4j.LoggerFactory
 import org.midonet.brain.{ClusterNode, ScheduledMinionConfig, ScheduledClusterMinion}
 import org.midonet.cluster.data.storage.Storage
 import org.midonet.cluster.models.Commons
-import org.midonet.cluster.models.Commons.UUID
+import org.midonet.cluster.models.Commons.{IPAddress, UUID}
 import org.midonet.cluster.models.Topology.Host.PortToInterface
-import org.midonet.cluster.models.Topology.{Host, Network, Port, Router}
+import org.midonet.cluster.models.Topology.TunnelZone.HostToIp
+import org.midonet.cluster.models.Topology._
 import org.midonet.cluster.util.UUIDUtil
 import org.midonet.config._
-import org.midonet.midolman.host.config.HostConfig
 import org.midonet.util.functors.makeRunnable
 
 /**
@@ -132,13 +133,31 @@ class TopologyZoomUpdater @Inject()(val nodeContext: ClusterNode.Context,
         (updatedPort, p2)
     }
 
-    private def bindPortToHostInterface(hostId: Commons.UUID, portId: UUID, interface: String) = {
-        val host = Await.result(storage.get(classOf[Host], hostId), 1 second)
+    private def bindPortToHostInterface(host: Host, portId: UUID, interface: String)
+    : Unit = {
         val updatedHost = host.toBuilder
             .addPortInterfaceMapping(PortToInterface.newBuilder
                                          .setPortId(portId)
                                          .setInterfaceName(interface)
                                          .build())
+            .build()
+        storage.update(updatedHost)
+    }
+
+    private def addTunnelZone(tzId: Commons.UUID, hosts: Set[HostToIp]): Unit = {
+        val tunnelZone = TunnelZone.newBuilder
+            .setId(tzId)
+            .setType(TunnelZone.Type.GRE)
+            .setName("Gaia")
+            .addAllHosts(hosts)
+            .build()
+
+        storage.create(tunnelZone)
+    }
+
+    private def addTunnelZoneToHost(host: Host, tzId: Commons.UUID): Unit = {
+        val updatedHost = host.toBuilder
+            .addTunnelZoneIds(tzId)
             .build()
         storage.update(updatedHost)
     }
@@ -149,13 +168,30 @@ class TopologyZoomUpdater @Inject()(val nodeContext: ClusterNode.Context,
         val portHost1 = createPort(pNet)
         val portHost2 = createPort(pNet)
 
+        log.info("host1 id: " + cfg.host1Id + " host2 id: " + cfg.host2Id)
+        val host1 = Await.result(storage.get(classOf[Host], cfg.host1Id), 1 second)
+        val host2 = Await.result(storage.get(classOf[Host], cfg.host2Id), 1 second)
+
+        log.debug("Adding a tunnel zone with the two hosts")
+        val hostToIp1 = HostToIp.newBuilder
+            .setHostId(host1.getId)
+            .setIp(IPAddress.newBuilder.setAddress("10.25.25.1").build())
+            .build()
+        val hostToIp2 = HostToIp.newBuilder
+            .setHostId(host2.getId)
+            .setIp(IPAddress.newBuilder.setAddress("10.25.25.2").build())
+            .build()
+        val tzId = UUIDUtil.randomUuidProto
+        addTunnelZone(tzId, Set(hostToIp1, hostToIp2))
+
         log.debug("Binding interfaces of the two hosts to their respective " +
                   "ports on the bridge")
-        log.info("host1 id: " + cfg.host1Id + " host2 id: " + cfg.host2Id)
-        bindPortToHostInterface(UUIDUtil.toProto(cfg.host1Id), portHost1.getId,
-                                cfg.host1Interface)
-        bindPortToHostInterface(UUIDUtil.toProto(cfg.host2Id), portHost2.getId,
-                                cfg.host2Interface)
+        bindPortToHostInterface(host1, portHost1.getId, cfg.host1Interface)
+        bindPortToHostInterface(host2, portHost2.getId, cfg.host2Interface)
+
+        log.debug("Adding the tunnel zone to the two hosts")
+        addTunnelZoneToHost(host1, tzId)
+        addTunnelZoneToHost(host2, tzId)
     }
 
     private def cleanUp() = {
