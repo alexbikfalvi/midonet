@@ -37,7 +37,7 @@ import org.midonet.util.reactivex.AwaitableObserver
 
 @RunWith(classOf[JUnitRunner])
 class BridgeMapperTest extends MidolmanSpec with TopologyBuilder
-                       with TopologyMatchers with LegacyBuilder {
+                       with TopologyMatchers {
 
     private var store: Storage = _
     private var vt: VirtualTopology = _
@@ -76,9 +76,6 @@ class BridgeMapperTest extends MidolmanSpec with TopologyBuilder
 
         When("The bridge is created")
         store.create(bridge)
-        // Create the bridge in the legacy storage, this is only needed for
-        // the bridge's replicated maps.
-        ensureLegacyBridge(zk, path, bridgeId)
 
         And("The observer subscribes to an observable on the mapper")
         Observable.create(mapper).subscribe(obs)
@@ -301,7 +298,6 @@ class BridgeMapperTest extends MidolmanSpec with TopologyBuilder
             val vlanId: Short = 1
             val obs = createObserver
             val bridge = testBridgeCreated(bridgeId, obs)
-            ensureLegacyBridgeVlan(zk, path, bridgeId, vlanId)
 
             When("Creating a peer bridge and port")
             val portId = UUID.randomUUID
@@ -345,7 +341,6 @@ class BridgeMapperTest extends MidolmanSpec with TopologyBuilder
             val peerVlanId: Short = 2
             val obs = createObserver
             val bridge = testBridgeCreated(bridgeId, obs)
-            ensureLegacyBridgeVlan(zk, path, bridgeId, vlanId)
 
             When("Creating a peer bridge and port")
             val portId = UUID.randomUUID

@@ -118,7 +118,7 @@ object BridgeMapper {
                 subject.onNext(MacTableUpdate(vlanId, mac, oldPort, newPort))
             }
         }
-        private val map = vt.dataClient.bridgeGetMacTable(bridgeId, vlanId, true)
+        private val map = vt.state.bridgeMacTable(bridgeId, vlanId, true)
 
         // Initialize the replicated map.
         map.setConnectionWatcher(vt.connectionWatcher)
@@ -219,7 +219,7 @@ object BridgeMapper {
      */
     private class BridgeIpv4MacMap(vt: VirtualTopology, bridgeId: UUID)
         extends IpMacMap[IPv4Addr] {
-        private val map = vt.dataClient.getIp4MacMap(bridgeId)
+        private val map = vt.state.bridgeIp4MacMap(bridgeId)
         map.setConnectionWatcher(vt.connectionWatcher)
         map.start()
 
