@@ -192,6 +192,7 @@ class HostService extends AbstractService with HostIdProviderService
                         .setName(metadata.getName)
                         .addAllAddresses(
                             metadata.getAddresses.map(_.asProto).toList.asJava)
+                        .build()
                     // Create the host object.
                     storage.create(host, hostId)
                 }
