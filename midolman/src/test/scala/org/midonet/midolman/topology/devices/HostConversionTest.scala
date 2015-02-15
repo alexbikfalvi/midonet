@@ -33,10 +33,6 @@ import org.midonet.sdn.flows.FlowTagger.FlowTag
 @RunWith(classOf[JUnitRunner])
 class HostConversionTest extends FeatureSpec with Matchers {
 
-    private def deviceTag(proto: Topology.Host): FlowTag = {
-        FlowTagger.tagForDevice(proto.getId.asJava)
-    }
-
     feature("Conversion for host") {
         scenario("Test conversion from Protocol Buffer message") {
             val proto = newProto

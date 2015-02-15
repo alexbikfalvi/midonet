@@ -58,8 +58,10 @@ final class PortMapper(id: UUID, vt: VirtualTopology)
     private lazy val deviceObservable =
         Observable.combineLatest[TopologyPort, Boolean, SimulationPort](
             vt.store.observable(classOf[TopologyPort], id)
+                .subscribeOn(vt.scheduler)
                 .distinctUntilChanged,
             vt.store.ownersObservable(classOf[TopologyPort], id)
+                .subscribeOn(vt.scheduler)
                 .map[Boolean](makeFunc1 { _.nonEmpty })
                 .distinctUntilChanged
                 .onErrorResumeNext(Observable.empty),

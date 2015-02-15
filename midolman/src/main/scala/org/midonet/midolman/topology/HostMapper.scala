@@ -198,7 +198,10 @@ final class HostMapper(hostId: UUID, vt: VirtualTopology)
      */
     private def watchAlive(): Unit = {
         try {
-            aliveSubject.onNext(vt.dataClient.hostsIsAlive(hostId, aliveWatcher))
+            vt.executor.submit(makeRunnable {
+                aliveSubject.onNext(vt.dataClient.hostsIsAlive(hostId,
+                                                               aliveWatcher))
+            })
         } catch {
             case e: StateAccessException =>
                 log.warn("Error retrieving alive state for host {}", hostId, e)

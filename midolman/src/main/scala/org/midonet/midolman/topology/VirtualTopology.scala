@@ -173,8 +173,6 @@ class VirtualTopology @Inject() (val config: MidolmanConfig,
 
     override def logSource = "org.midonet.devices.devices-service"
 
-    private implicit val actorSystem = actorsService.system
-
     private[topology] val devices =
         new ConcurrentHashMap[UUID, Device]()
     private[topology] val observables =
@@ -190,7 +188,7 @@ class VirtualTopology @Inject() (val config: MidolmanConfig,
         classTag[VxLanPort] -> (new PortMapper(_, this)),
         classTag[TunnelZone] -> (new TunnelZoneMapper(_, this)),
         classTag[Host] -> (new HostMapper(_, this)),
-        classTag[Bridge] -> (new BridgeMapper(_, this))
+        classTag[Bridge] -> (new BridgeMapper(_, this)(actorsService.system))
     )
 
     register(this)

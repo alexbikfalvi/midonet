@@ -81,16 +81,10 @@ class DeviceMapperTest extends MidolmanSpec {
 
     type TestableObserver = AwaitableObserver[TestableDevice]
 
-    var config: MidolmanConfig = _
-    @Mocked
-    var storage: StorageWithOwnership = _
-    @Mocked
-    var state: StateStorage = _
     implicit var vt: VirtualTopology = _
 
     override def beforeTest(): Unit = {
-        vt = new VirtualTopology(config, storage, state, clusterDataClient,
-                                 null, null, actorsService)
+        vt = injector.getInstance(classOf[VirtualTopology])
     }
 
     feature("Test device observable subscription") {
