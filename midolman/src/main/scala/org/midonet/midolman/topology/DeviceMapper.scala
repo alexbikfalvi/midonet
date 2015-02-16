@@ -95,7 +95,7 @@ abstract class DeviceMapper[D <: Device](id: UUID, vt: VirtualTopology)
     }
 
     override final def onError(e: Throwable) = {
-        log.error("Device {}/{} error", tag, id, e)
+        log.error("Device {}/{} error {}", tag, id, e)
         error.set(e)
         vt.devices.remove(id) match {
             case device: D => onDeviceChanged(device)

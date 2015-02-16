@@ -16,13 +16,12 @@
 package org.midonet.midolman.topology
 
 import java.util.UUID
-import java.util.concurrent.{ConcurrentHashMap, Executors, ThreadFactory}
+import java.util.concurrent.{ThreadFactory, Executors, ConcurrentHashMap}
 
 import scala.concurrent.{Future, Promise}
 import scala.reflect._
 
 import com.google.inject.Inject
-
 import rx.Observable
 import rx.schedulers.Schedulers
 
@@ -31,6 +30,7 @@ import org.midonet.cluster.data.storage.StorageWithOwnership
 import org.midonet.cluster.state.StateStorage
 import org.midonet.midolman.FlowController.InvalidateFlowsByTag
 import org.midonet.midolman.config.MidolmanConfig
+import org.midonet.midolman.simulation.Chain
 import org.midonet.midolman.logging.MidolmanLogging
 import org.midonet.midolman.services.MidolmanActorsService
 import org.midonet.midolman.simulation.Bridge
@@ -191,7 +191,8 @@ class VirtualTopology @Inject() (val config: MidolmanConfig,
         classTag[VxLanPort] -> (new PortMapper(_, this)),
         classTag[TunnelZone] -> (new TunnelZoneMapper(_, this)),
         classTag[Host] -> (new HostMapper(_, this)),
-        classTag[Bridge] -> (new BridgeMapper(_, this)(actorsService.system))
+        classTag[Bridge] -> (new BridgeMapper(_, this)(actorsService.system)),
+        classTag[Chain] -> (new ChainMapper(_, this))
     )
 
     register(this)
