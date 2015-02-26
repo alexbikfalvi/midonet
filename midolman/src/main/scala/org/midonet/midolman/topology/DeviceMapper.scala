@@ -29,7 +29,7 @@ import org.midonet.midolman.logging.MidolmanLogging
 import org.midonet.midolman.topology.VirtualTopology.Device
 
 object DeviceMapper {
-    protected[topology] val SUBSCRIPTION_EXCEPTION =
+    protected[topology] val SubscriptionException =
         new IllegalStateException("Device observable not connected")
 }
 
@@ -55,9 +55,9 @@ object DeviceMapper {
  */
 abstract class DeviceMapper[D <: Device](id: UUID, vt: VirtualTopology)
                                         (implicit tag: ClassTag[D])
-        extends OnSubscribe[D] with Observer[D] with MidolmanLogging {
+    extends OnSubscribe[D] with Observer[D] with MidolmanLogging {
 
-    import org.midonet.midolman.topology.DeviceMapper.SUBSCRIPTION_EXCEPTION
+    import org.midonet.midolman.topology.DeviceMapper.SubscriptionException
 
     private final val cache = BehaviorSubject.create[D]()
     private final val subscriber = Subscribers.from(cache)
@@ -80,7 +80,7 @@ abstract class DeviceMapper[D <: Device](id: UUID, vt: VirtualTopology)
         }
         if (subscriber.isUnsubscribed) {
             val e = error.get
-            throw if (null != e) e else SUBSCRIPTION_EXCEPTION
+            throw if (null != e) e else SubscriptionException
         }
         cache.subscribe(s)
     }

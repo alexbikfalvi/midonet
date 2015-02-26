@@ -31,6 +31,7 @@ import org.midonet.cluster.data.storage.StorageWithOwnership
 import org.midonet.midolman.FlowController.InvalidateFlowsByTag
 import org.midonet.midolman.logging.MidolmanLogging
 import org.midonet.midolman.services.MidolmanActorsService
+import org.midonet.midolman.state.ZkConnectionAwareWatcher
 import org.midonet.midolman.topology.devices._
 import org.midonet.midolman.{FlowController, NotYetException}
 import org.midonet.sdn.flows.FlowTagger.FlowTag
@@ -154,6 +155,7 @@ object VirtualTopology extends MidolmanLogging {
  */
 class VirtualTopology @Inject() (val store: StorageWithOwnership,
                                  val dataClient: DataClient,
+                                 val connectionWatcher: ZkConnectionAwareWatcher,
                                  val actorsService: MidolmanActorsService)
         extends MidolmanLogging {
 
