@@ -119,14 +119,17 @@ class HostMapperTest extends MidolmanSpec
             val observable = Observable.create(hostMapper)
 
             When("We subscribe to the host")
-            val hostObs = new AwaitableObserver[SimHost](2, assertThread())
+            val hostObs = new AwaitableObserver[SimHost](1, assertThread())
             observable.subscribe(hostObs)
 
-            And("We remove the host from the tunnel zone")
+            And("Waiting for the host")
+            hostObs.await(timeout, 1) shouldBe true
+
+            Then("We remove the host from the tunnel zone")
             val protoHost2 = removeHostFromAllTunnelZones(protoHost1)
 
             Then("We obtain a simulation host that does not belong to any tunnel zones")
-            hostObs.await(timeout, 0) shouldBe true
+            hostObs.await(timeout) shouldBe true
             val simHost = hostObs.getOnNextEvents.last
             assertEquals(simHost, protoHost2, Set.empty)
 
