@@ -25,7 +25,6 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FeatureSpec, Matchers}
 
 import org.midonet.cluster.data.ZoomConvert
-import org.midonet.cluster.models.Commons
 import org.midonet.cluster.models.Topology.Rule
 import org.midonet.cluster.models.Topology.Rule.{Type, Action}
 import org.midonet.cluster.util.{RangeUtil, IPSubnetUtil, IPAddressUtil}

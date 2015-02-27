@@ -16,7 +16,6 @@
 
 package org.midonet.midolman.topology
 
-import java.util
 import java.util.UUID
 
 import scala.collection.JavaConversions._
@@ -33,13 +32,10 @@ import org.midonet.cluster.models.Commons
 import org.midonet.cluster.models.Topology.Rule.{JumpRuleData, Type}
 import org.midonet.cluster.models.Topology.{Chain => ProtoChain, Rule => ProtoRule}
 import org.midonet.cluster.util.UUIDUtil._
-import org.midonet.midolman.FlowController.InvalidateFlowsByTag
 import org.midonet.midolman.rules.{Rule => SimRule, _}
 import org.midonet.midolman.simulation.{Chain => SimChain}
 import org.midonet.midolman.util.MidolmanSpec
-import org.midonet.midolman.util.mock.MessageAccumulator
 import org.midonet.midolman.{FlowController, NotYetException}
-import org.midonet.sdn.flows.FlowTagger
 import org.midonet.util.reactivex.AwaitableObserver
 
 @RunWith(classOf[JUnitRunner])
@@ -60,7 +56,7 @@ class ChainMapperTest extends MidolmanSpec
 
     override protected def fillConfig(config: HierarchicalConfiguration) = {
         super.fillConfig(config)
-        config.setProperty("zookeeper.cluster_storage_enabled", true)
+        config.setProperty("midolman.cluster_storage_enabled", true)
         config
     }
 
