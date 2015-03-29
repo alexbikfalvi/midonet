@@ -28,7 +28,8 @@ import org.slf4j.LoggerFactory
 
 import org.midonet.cluster.services.MidonetBackend
 import org.midonet.cluster.storage._
-import org.midonet.conf.{HostIdGenerator, MidoNodeConfigurator}
+import org.midonet.conf.HostIdGenerator
+import org.midonet.conf.MidoNodeConfigurator.bootstrapConfig
 import org.midonet.midolman.cluster.LegacyClusterModule
 import org.midonet.midolman.cluster.serialization.SerializationModule
 import org.midonet.midolman.cluster.zookeeper.ZookeeperConnectionModule.ZookeeperReactorProvider
@@ -95,6 +96,12 @@ object ClusterNode extends App {
     dataSrc.setPassword(conf.c3po.password)
 
     private val daemon = new Daemon(nodeId, minionDefs)
+    private val configModule = new AbstractModule {
+        override def configure(): Unit = {
+            bind(classOf[MidonetBackendConfig])
+                .toInstance(new MidonetBackendConfig(bootstrapConfig()))
+        }
+    }
     private val clusterNodeModule = new AbstractModule {
         override def configure(): Unit = {
 
@@ -126,8 +133,6 @@ object ClusterNode extends App {
             // Zookeeper stuff for DataClient
             // roughly equivalent to ZookeeperConnectionModule,
             // but without conflicts
-            val zkConfig = new MidonetBackendConfig(MidoNodeConfigurator.bootstrapConfig())
-            bind(classOf[MidonetBackendConfig]).toInstance(zkConfig)
             bind(classOf[ZkConnection])
                 .toProvider(classOf[ZkConnectionProvider])
                 .asEagerSingleton()
@@ -148,6 +153,7 @@ object ClusterNode extends App {
     }
 
     protected[brain] var injector = Guice.createInjector(
+        configModule,
         new MidonetBackendModule(),
         clusterNodeModule,
         dataClientDependencies
