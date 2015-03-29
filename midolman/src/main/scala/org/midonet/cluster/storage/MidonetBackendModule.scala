@@ -23,25 +23,22 @@ import org.apache.curator.retry.ExponentialBackoffRetry
 
 import org.midonet.cluster.ZookeeperLockFactory
 import org.midonet.cluster.services.{MidonetBackend, MidonetBackendService}
-import org.midonet.conf.MidoNodeConfigurator.bootstrapConfig
-
-object MidonetBackendModule {
-    def apply() = new MidonetBackendModule()
-}
 
 /** This Guice module is dedicated to declare general-purpose dependencies that
   * are exposed to MidoNet components that need to access the various storage
   * backends that exist within a deployment.  It should not include any
   * dependencies linked to any specific service or component. */
-class MidonetBackendModule(val conf: Config = bootstrapConfig())
+class MidonetBackendModule(val conf: MidonetBackendConfig)
     extends PrivateModule {
+
+    def this(config: Config) = this(new MidonetBackendConfig(config))
+
     override def configure(): Unit = {
         bindCurator()
         bindStorage()
         bindLockFactory()
 
-        bind(classOf[MidonetBackendConfig])
-            .toInstance(new MidonetBackendConfig(conf))
+        bind(classOf[MidonetBackendConfig]).toInstance(conf)
         expose(classOf[MidonetBackendConfig])
     }
 

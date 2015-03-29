@@ -96,12 +96,6 @@ object ClusterNode extends App {
     dataSrc.setPassword(conf.c3po.password)
 
     private val daemon = new Daemon(nodeId, minionDefs)
-    private val configModule = new AbstractModule {
-        override def configure(): Unit = {
-            bind(classOf[MidonetBackendConfig])
-                .toInstance(new MidonetBackendConfig(bootstrapConfig()))
-        }
-    }
     private val clusterNodeModule = new AbstractModule {
         override def configure(): Unit = {
 
@@ -153,8 +147,7 @@ object ClusterNode extends App {
     }
 
     protected[brain] var injector = Guice.createInjector(
-        configModule,
-        new MidonetBackendModule(),
+        new MidonetBackendModule(conf.backend),
         clusterNodeModule,
         dataClientDependencies
     )
