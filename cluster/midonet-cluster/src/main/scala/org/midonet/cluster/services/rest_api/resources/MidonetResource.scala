@@ -44,7 +44,7 @@ import org.midonet.cluster.rest_api.annotation.{AllowCreate, AllowGet, AllowList
 import org.midonet.cluster.rest_api.models.UriResource
 import org.midonet.cluster.rest_api._
 import org.midonet.cluster.rest_api.ResponseUtils.buildErrorResponse
-import org.midonet.cluster.services.MidonetBackend
+import org.midonet.cluster.services.{Backend, MidonetBackend}
 import org.midonet.cluster.services.rest_api.resources.MidonetResource._
 import org.midonet.cluster.util.SequenceDispenser
 import org.midonet.midolman.state._
@@ -153,6 +153,7 @@ object MidonetResource {
         }
     }
 
+<<<<<<< HEAD
     protected def tryResponse(handler: PartialFunction[Response, Response],
                               catcher: PartialFunction[Throwable, Response])
                              (f: => Response): Response = {
@@ -160,6 +161,9 @@ object MidonetResource {
     }
 
     case class ResourceContext @Inject() (backend: MidonetBackend,
+=======
+    case class ResourceContext @Inject() (backend: Backend,
+>>>>>>> be736ab... Reference implementation of Router Peering and Peering Facility APIs.
                                           uriInfo: UriInfo,
                                           validator: Validator,
                                           seqDispenser: SequenceDispenser,
