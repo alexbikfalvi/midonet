@@ -1029,6 +1029,8 @@ class AliasManager():
 
         if isinstance(parent, Midonet):
             parent = None
+        if isinstance(parent, Federation):
+            parent = None
         if parent is not None:
             if isinstance(parent, ObjectType):
                 parent = parent.fetch_field('id')
@@ -1051,6 +1053,8 @@ class AliasManager():
         resolved = None
 
         if isinstance(parent, Midonet):
+            parent = None
+        if isinstance(parent, Federation):
             parent = None
         if parent is not None:
             if isinstance(parent, ObjectType):
@@ -1282,7 +1286,7 @@ class ObjectType(object):
             if memb is None:
                 raise Exception
             return memb
-        except Exception as e:
+        except:
             raise Exception("bug in type definition: %s::%s" % (
                 self.__class__.__name__, member_name))
 
@@ -2447,53 +2451,50 @@ class Vtep(ObjectType):
         return "vtep"
 
 
-class VtepBinding(ObjectType):
-    def __init__(self, obj):
-        super(VtepBinding, self).__init__(obj)
-        self.clear_attrs()
-        self.put_attr(SingleAttr(name = 'management-ip',
-                                 value_type = IPv4Address(),
-                                 getter = 'get_mgmt_ip'))
-        self.put_attr(SingleAttr(name = 'physical-port',
-                                 value_type = StringType(),
-                                 setter = 'port_name',
-                                 getter = 'get_port_name'))
-        self.put_attr(SingleAttr(name = 'vlan',
-                                 value_type = StringType(),
-                                 setter = 'vlan_id',
-                                 getter = 'get_vlan_id'))
-        self.put_attr(SingleAttr(name = 'network-id',
-                                 value_type = StringType(),
-                                 getter = 'get_network_id',
-                                 setter = 'network_id'))
-
-    def type_name(self):
-        return "binding"
-
-class VtepGroup(ObjectType):
-    def type_name(self):
-        return "vtep-group"
-
-    def __init__(self, obj):
-        super(VtepGroup, self).__init__(obj)
-        self.put_attr(SingleAttr(name = 'name',
-                                 value_type = StringType(),
-                                 getter = 'get_name',
-                                 setter = 'name'))
-        # self.put_attr(SingleAttr(name = 'segment',
-        #                          value_type = ObjectRef('vxlan-segment'),
-        #                          getter = 'get_segments'))
-        # self.put_attr(SingleAttr(name = 'ovsdb-vtep',
-        #                          value_type = ObjectRef('ovsdb-vtep'),
-        #                          getter = 'get_ovsdb_vteps'))
-        # self.put_attr(SingleAttr(name = 'midonet-vtep',
-        #                          value_type = ObjectRef('midonet-vtep'),
-        #                          getter = 'get_midonet_vteps'))
+# class VtepBinding(ObjectType):
+#     def __init__(self, obj):
+#         super(VtepBinding, self).__init__(obj)
+#         self.clear_attrs()
+#         self.put_attr(SingleAttr(name = 'management-ip',
+#                                  value_type = IPv4Address(),
+#                                  getter = 'get_mgmt_ip'))
+#         self.put_attr(SingleAttr(name = 'physical-port',
+#                                  value_type = StringType(),
+#                                  setter = 'port_name',
+#                                  getter = 'get_port_name'))
+#         self.put_attr(SingleAttr(name = 'vlan',
+#                                  value_type = StringType(),
+#                                  setter = 'vlan_id',
+#                                  getter = 'get_vlan_id'))
+#         self.put_attr(SingleAttr(name = 'network-id',
+#                                  value_type = StringType(),
+#                                  getter = 'get_network_id',
+#                                  setter = 'network_id'))
+#
+#     def type_name(self):
+#         return "binding"
+#
+# class VtepGroup(ObjectType):
+#     def type_name(self):
+#         return "vtep-group"
+#
+#     def __init__(self, obj):
+#         super(VtepGroup, self).__init__(obj)
+#         self.put_attr(SingleAttr(name = 'name',
+#                                  value_type = StringType(),
+#                                  getter = 'get_name',
+#                                  setter = 'name'))
+#         self.put_attr(SingleAttr(name = 'segment',
+#                                  value_type = ObjectRef('vxlan-segment'),
+#                                  getter = 'get_segments'))
+#         self.put_attr(SingleAttr(name = 'ovsdb-vtep',
+#                                  value_type = ObjectRef('ovsdb-vtep'),
+#                                  getter = 'get_ovsdb_vteps'))
+#         self.put_attr(SingleAttr(name = 'midonet-vtep',
+#                                  value_type = ObjectRef('midonet-vtep'),
+#                                  getter = 'get_midonet_vteps'))
 
 class VxlanSegment(ObjectType):
-    def type_name(self):
-        return "vxlan-segment"
-
     def __init__(self, obj):
         super(VxlanSegment, self).__init__(obj)
         self.put_attr(SingleAttr(name = 'name',
@@ -2523,86 +2524,89 @@ class VxlanSegment(ObjectType):
         #                         setter = 'ovsdb_bindings',
         #                         optional = True))
 
-class MidonetVtep(ObjectType):
     def type_name(self):
-        return "midonet-vtep"
+        return "vxlan-segment"
 
-    def __init__(self, obj):
-        super(MidonetVtep, self).__init__(obj)
-        self.put_attr(SingleAttr(name = 'name',
-                                 value_type = StringType(),
-                                 getter = 'get_name',
-                                 setter = 'name'))
-        self.put_attr(SingleAttr(name = 'group',
-                                 value_type = StringType(),
-                                 getter = 'get_group',
-                                 setter = 'group'))
-        self.put_attr(SingleAttr(name = 'vtep-router',
-                                 value_type = StringType(),
-                                 getter = 'get_vtep_router',
-                                 setter = 'vtep_router'))
-        self.put_attr(SingleAttr(name = 'username',
-                                 value_type = StringType(),
-                                 getter = 'get_username',
-                                 setter = 'username'))
-        self.put_attr(SingleAttr(name = 'password',
-                                 value_type = StringType(),
-                                 getter = 'get_password',
-                                 setter = 'password'))
-        self.put_attr(ListAttr(name = 'api-endpoints',
-                               element_type = IPv4Address(),
-                               getter = 'get_api_endpoints',
-                               setter = 'api_endpoints'))
-
-class MidonetBinding(ObjectType):
-    def type_name(self):
-        return "midonet-binding"
-
-    def __init__(self, obj):
-        super(MidonetBinding, self).__init__(obj)
-        self.put_attr(SingleAttr(name = 'vtep',
-                                 value_type = ObjectRef('midonet-vtep'),
-                                 getter = 'get_midonet_vtep',
-                                 setter = 'midonet_vtep'))
-        self.put_attr(SingleAttr(name = 'router-id',
-                                 value_type = UUID,
-                                 getter = 'get_router_id',
-                                 setter = 'router_id'))
-        self.put_attr(SingleAttr(name = 'router-ip',
-                                 value_type = IPv4Address(),
-                                 getter = 'get_router_ip'))
-        self.put_attr(SingleAttr(name = 'router-mac',
-                                 value_type = MacAddress(),
-                                 getter = 'get_router_mac'))
-        self.put_attr(SingleAttr(name = 'router-port-id',
-                                 value_type = UUID,
-                                 getter = 'get_router_port_id'))
-        self.put_attr(SingleAttr(name = 'vtep-port-id',
-                                 value_type = UUID,
-                                 getter = 'get_vtep_port_id'))
-
-class OvsdbVtep(ObjectType):
-    def type_name(self):
-        return "ovsdb-vtep"
-
-    def __init__(self, obj):
-        super(OvsdbVtep, self).__init__(obj)
-        self.put_attr(SingleAttr(name = 'name',
-                                 value_type = StringType(),
-                                 getter = 'get_name',
-                                 setter = 'name'))
-        self.put_attr(SingleAttr(name = 'group',
-                                 value_type = StringType(),
-                                 getter = 'get_group',
-                                 setter = 'group'))
-        self.put_attr(SingleAttr(name = 'management-ip',
-                                 value_type = IPv4Address(),
-                                 getter = 'get_management_ip',
-                                 setter = 'management_ip'))
-        self.put_attr(SingleAttr(name = 'management-port',
-                                 value_type = L4PortNumber(),
-                                 getter = 'get_management_port',
-                                 setter = 'management_port'))
+# class MidonetVtep(ObjectType):
+#     def type_name(self):
+#         return "midonet-vtep"
+#
+#     def __init__(self, obj):
+#         super(MidonetVtep, self).__init__(obj)
+#         self.put_attr(SingleAttr(name = 'name',
+#                                  value_type = StringType(),
+#                                  getter = 'get_name',
+#                                  setter = 'name'))
+#         self.put_attr(SingleAttr(name = 'group',
+#                                  value_type = StringType(),
+#                                  getter = 'get_group',
+#                                  setter = 'group'))
+#         self.put_attr(SingleAttr(name = 'vtep-router',
+#                                  value_type = StringType(),
+#                                  getter = 'get_vtep_router',
+#                                  setter = 'vtep_router'))
+#         self.put_attr(SingleAttr(name = 'username',
+#                                  value_type = StringType(),
+#                                  getter = 'get_username',
+#                                  setter = 'username'))
+#         self.put_attr(SingleAttr(name = 'password',
+#                                  value_type = StringType(),
+#                                  getter = 'get_password',
+#                                  setter = 'password'))
+#         self.put_attr(ListAttr(name = 'api-endpoints',
+#                                element_type = IPv4Address(),
+#                                getter = 'get_api_endpoints',
+#                                setter = 'api_endpoints'))
+#
+# class MidonetBinding(ObjectType):
+#     def type_name(self):
+#         return "midonet-binding"
+#
+#     def __init__(self, obj):
+#         super(MidonetBinding, self).__init__(obj)
+#         self.put_attr(SingleAttr(name = 'vtep',
+#                                  value_type = ObjectRef('midonet-vtep'),
+#                                  getter = 'get_midonet_vtep',
+#                                  setter = 'midonet_vtep'))
+#         self.put_attr(SingleAttr(name = 'router-id',
+#                                  value_type = UUID,
+#                                  getter = 'get_router_id',
+#                                  setter = 'router_id'))
+#         self.put_attr(SingleAttr(name = 'router-ip',
+#                                  value_type = IPv4Address(),
+#                                  getter = 'get_router_ip'))
+#         self.put_attr(SingleAttr(name = 'router-mac',
+#                                  value_type = MacAddress(),
+#                                  getter = 'get_router_mac'))
+#         self.put_attr(SingleAttr(name = 'router-port-id',
+#                                  value_type = UUID,
+#                                  getter = 'get_router_port_id'))
+#         self.put_attr(SingleAttr(name = 'vtep-port-id',
+#                                  value_type = UUID,
+#                                  getter = 'get_vtep_port_id'))
+#
+# class OvsdbVtep(ObjectType):
+#     def type_name(self):
+#         return "ovsdb-vtep"
+#
+#     def __init__(self, obj):
+#         super(OvsdbVtep, self).__init__(obj)
+#         self.put_attr(SingleAttr(name = 'name',
+#                                  value_type = StringType(),
+#                                  getter = 'get_name',
+#                                  setter = 'name'))
+#         self.put_attr(SingleAttr(name = 'group',
+#                                  value_type = StringType(),
+#                                  getter = 'get_group',
+#                                  setter = 'group'))
+#         self.put_attr(SingleAttr(name = 'management-ip',
+#                                  value_type = IPv4Address(),
+#                                  getter = 'get_management_ip',
+#                                  setter = 'management_ip'))
+#         self.put_attr(SingleAttr(name = 'management-port',
+#                                  value_type = L4PortNumber(),
+#                                  getter = 'get_management_port',
+#                                  setter = 'management_port'))
 
 def _port_resolver(port):
     # This function dispatches the appropriate port class depending on the
@@ -2718,26 +2722,26 @@ class Federation(ObjectType):
         self.put_attr(SingleObject(name = 'system-state',
                                    element_type = SystemState,
                                    getter = 'get_system_state'))
-        self.put_attr(Collection(name = 'vtep-group',
-                                 element_type = VtepGroup,
-                                 list_method = 'get_vtep_groups',
-                                 getter = 'get_vtep_group',
-                                 factory_method = 'add_vtep_group'))
+        # self.put_attr(Collection(name = 'vtep-group',
+        #                          element_type = VtepGroup,
+        #                          list_method = 'get_vtep_groups',
+        #                          getter = 'get_vtep_group',
+        #                          factory_method = 'add_vtep_group'))
         self.put_attr(Collection(name = 'vxlan-segment',
                                  element_type = VxlanSegment,
                                  list_method = 'get_vxlan_segments',
                                  getter = 'get_vxlan_segment',
                                  factory_method = 'add_vxlan_segment'))
-        self.put_attr(Collection(name = 'midonet-vtep',
-                                 element_type = MidonetVtep,
-                                 list_method = 'get_midonet_vteps',
-                                 getter = 'get_midonet_vtep',
-                                 factory_method = 'add_midonet_vtep'))
-        self.put_attr(Collection(name = 'ovsdb-vtep',
-                                 element_type = OvsdbVtep,
-                                 list_method = 'get_ovsdb_vteps',
-                                 getter = 'get_ovsdb_vtep',
-                                 factory_method = 'add_ovsdb_vtep'))
+        # self.put_attr(Collection(name = 'midonet-vtep',
+        #                          element_type = MidonetVtep,
+        #                          list_method = 'get_midonet_vteps',
+        #                          getter = 'get_midonet_vtep',
+        #                          factory_method = 'add_midonet_vtep'))
+        # self.put_attr(Collection(name = 'ovsdb-vtep',
+        #                          element_type = OvsdbVtep,
+        #                          list_method = 'get_ovsdb_vteps',
+        #                          getter = 'get_ovsdb_vtep',
+        #                          factory_method = 'add_ovsdb_vtep'))
 
 
 ################################################################################
@@ -4103,7 +4107,8 @@ class List(Command):
                 collection = tok
             elif isinstance(tok, ObjectType):
                 ref = tok
-                if not isinstance(tok, Midonet):
+                if not isinstance(tok, Midonet) and\
+                        not isinstance(tok, Federation):
                     chain.append(tok)
             elif isinstance(tok, list):
                 list_filter = tok
@@ -4351,7 +4356,7 @@ if __name__ == '__main__':
                 sys.stderr.write("Internal error: %s\n" % str(err))
             sys.exit(1)
         aliases = AliasManager() if session.enable_alias_manager else NoOpAliasManager()
-        if session.federation: app = Federation(root._ensure_application())
+        if session.federation: app = Federation(root)
         else: app = Midonet(root)
         cli = MidonetCLI(app, session.do_eval)
         if session.do_eval:

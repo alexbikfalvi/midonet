@@ -18,6 +18,7 @@ package org.midonet.cluster.services.rest_api.resources.federation
 
 import java.util
 
+import javax.servlet.DispatcherType
 import javax.validation.Validator
 
 import scala.collection.JavaConversions._
@@ -30,18 +31,19 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer
 import com.typesafe.scalalogging.Logger
 
 import org.apache.curator.framework.CuratorFramework
-import org.eclipse.jetty.server.{DispatcherType, Server}
+import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.{DefaultServlet, ServletContextHandler}
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 
 import org.midonet.cluster.auth.{AuthModule, AuthService}
+import org.midonet.cluster.data.storage.StateTableStorage
 import org.midonet.cluster.rest_api.auth.{AdminOnlyAuthFilter, AuthFilter}
 import org.midonet.cluster.rest_api.jaxrs.WildcardJacksonJaxbJsonProvider
 import org.midonet.cluster.rest_api.validation.ValidatorProvider
 import org.midonet.cluster.services.rest_api.CorsFilter
 import org.midonet.cluster.services.{Backend, ClusterService, FederationBackend, Minion}
-import org.midonet.cluster.storage.MidonetBackendConfig
+import org.midonet.cluster.storage.{LegacyStateTableStorage, MidonetBackendConfig}
 import org.midonet.cluster.util.SequenceDispenser
 import org.midonet.cluster.{ClusterConfig, ClusterNode}
 import org.midonet.midolman.state.PathBuilder
@@ -63,15 +65,18 @@ object Yaroslav {
 
         override def configureServlets(): Unit = {
             // To redirect JDK log to slf4j. Ref: MNA-706
-            SLF4JBridgeHandler.removeHandlersForRootLogger();
-            SLF4JBridgeHandler.install();
+            SLF4JBridgeHandler.removeHandlersForRootLogger()
+            SLF4JBridgeHandler.install()
 
             install(new AuthModule(config.auth, log))
 
+            val paths = new PathBuilder(config.backend.rootKey)
+
             bind(classOf[WildcardJacksonJaxbJsonProvider]).asEagerSingleton()
             bind(classOf[CorsFilter])
-            bind(classOf[PathBuilder])
-                .toInstance(new PathBuilder(config.backend.rootKey))
+            bind(classOf[PathBuilder]).toInstance(paths)
+            bind(classOf[StateTableStorage])
+                .toInstance(new LegacyStateTableStorage(curator, paths))
             bind(classOf[CuratorFramework]).toInstance(curator)
             bind(classOf[FederationBackend]).toInstance(backend)
             bind(classOf[Backend]).toInstance(backend)

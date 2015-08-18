@@ -20,17 +20,16 @@ import java.util.UUID
 
 import javax.ws.rs.core.MediaType.APPLICATION_JSON
 
+import scala.collection.JavaConverters._
+
 import com.google.inject.Inject
 import com.google.inject.servlet.RequestScoped
 
-import org.apache.curator.framework.CuratorFramework
-
 import org.midonet.cluster.rest_api.annotation._
-import org.midonet.cluster.rest_api.models.federation.{MidonetVtep, OvsdbVtep}
-import FederationMediaTypes._
+import org.midonet.cluster.rest_api.models.federation.{OvsdbVtep, VtepGroup}
 import org.midonet.cluster.services.rest_api.resources.MidonetResource
-import org.midonet.cluster.services.rest_api.resources.MidonetResource.ResourceContext
-import org.midonet.midolman.state.PathBuilder
+import org.midonet.cluster.services.rest_api.resources.MidonetResource._
+import org.midonet.cluster.services.rest_api.resources.federation.FederationMediaTypes._
 
 @RequestScoped
 @AllowGet(Array(OVSDB_VTEP_JSON,
@@ -42,12 +41,8 @@ import org.midonet.midolman.state.PathBuilder
 @AllowUpdate(Array(OVSDB_VTEP_JSON,
                    APPLICATION_JSON))
 @AllowDelete
-class OvsdbVtepResource @Inject()(resContext: ResourceContext,
-                                  pathBuilder: PathBuilder,
-                                  curator: CuratorFramework)
-    extends MidonetResource[OvsdbVtep](resContext) {
-
-}
+class OvsdbVtepResource @Inject()(resContext: ResourceContext)
+    extends MidonetResource[OvsdbVtep](resContext)
 
 @RequestScoped
 @AllowGet(Array(OVSDB_VTEP_JSON,
@@ -63,11 +58,15 @@ class OvsdbVtepInGroupResource @Inject()(vtepGroupId: UUID,
                                          resContext: ResourceContext)
     extends MidonetResource[OvsdbVtep](resContext) {
 
-    protected override def listFilter = (vtep: OvsdbVtep) => {
-        vtep.group == vtepGroupId
+    protected override def listIds: Ids = {
+        getResource(classOf[VtepGroup], vtepGroupId) map {
+            _.midonetVtepIds.asScala
+        }
     }
 
-    protected override def createFilter = (vtep: OvsdbVtep) => {
+    protected override def createFilter(vtep: OvsdbVtep): Ops = {
         vtep.create(vtepGroupId)
+        NoOps
     }
+
 }

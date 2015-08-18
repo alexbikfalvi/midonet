@@ -20,17 +20,16 @@ import java.util.UUID
 
 import javax.ws.rs.core.MediaType.APPLICATION_JSON
 
+import scala.collection.JavaConverters._
+
 import com.google.inject.Inject
 import com.google.inject.servlet.RequestScoped
 
-import org.apache.curator.framework.CuratorFramework
-
 import org.midonet.cluster.rest_api.annotation._
-import org.midonet.cluster.rest_api.models.federation.{MidonetVtep, VxlanSegment}
-import FederationMediaTypes._
+import org.midonet.cluster.rest_api.models.federation.{VtepGroup, VxlanSegment}
 import org.midonet.cluster.services.rest_api.resources.MidonetResource
-import org.midonet.cluster.services.rest_api.resources.MidonetResource.ResourceContext
-import org.midonet.midolman.state.PathBuilder
+import org.midonet.cluster.services.rest_api.resources.MidonetResource.{NoOps, Ops, Ids, ResourceContext}
+import org.midonet.cluster.services.rest_api.resources.federation.FederationMediaTypes._
 
 @RequestScoped
 @AllowGet(Array(VXLAN_SEGMENT_JSON,
@@ -42,12 +41,8 @@ import org.midonet.midolman.state.PathBuilder
 @AllowUpdate(Array(VXLAN_SEGMENT_JSON,
                    APPLICATION_JSON))
 @AllowDelete
-class VxlanSegmentResource @Inject()(resContext: ResourceContext,
-                                     pathBuilder: PathBuilder,
-                                     curator: CuratorFramework)
-    extends MidonetResource[VxlanSegment](resContext) {
-
-}
+class VxlanSegmentResource @Inject()(resContext: ResourceContext)
+    extends MidonetResource[VxlanSegment](resContext)
 
 @RequestScoped
 @AllowGet(Array(VXLAN_SEGMENT_JSON,
@@ -63,11 +58,15 @@ class VxlanSegmentInGroupResource @Inject()(vtepGroupId: UUID,
                                             resContext: ResourceContext)
     extends MidonetResource[VxlanSegment](resContext) {
 
-    protected override def listFilter = (segment: VxlanSegment) => {
-        segment.group == vtepGroupId
+    protected override def listIds: Ids = {
+        getResource(classOf[VtepGroup], vtepGroupId) map {
+            _.vxlanSegmentIds.asScala
+        }
     }
 
-    protected override def createFilter = (segment: VxlanSegment) => {
-        segment.create(vtepGroupId)
+    protected override def createFilter(vtep: VxlanSegment): Ops = {
+        vtep.create(vtepGroupId)
+        NoOps
     }
+
 }

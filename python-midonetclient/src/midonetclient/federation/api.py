@@ -46,3 +46,7 @@ class FederationApi(object):
     def get_system_state(self):
         self._ensure_application()
         return self.app.get_system_state()
+
+    def get_vxlan_segments(self):
+        self._ensure_application()
+        return self.app.get_vxlan_segments()

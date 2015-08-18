@@ -153,17 +153,13 @@ object MidonetResource {
         }
     }
 
-<<<<<<< HEAD
     protected def tryResponse(handler: PartialFunction[Response, Response],
                               catcher: PartialFunction[Throwable, Response])
                              (f: => Response): Response = {
         (handler orElse DefaultHandler)(try f catch catcher orElse DefaultCatcher)
     }
 
-    case class ResourceContext @Inject() (backend: MidonetBackend,
-=======
     case class ResourceContext @Inject() (backend: Backend,
->>>>>>> be736ab... Reference implementation of Router Peering and Peering Facility APIs.
                                           uriInfo: UriInfo,
                                           validator: Validator,
                                           seqDispenser: SequenceDispenser,
