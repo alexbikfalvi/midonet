@@ -262,3 +262,9 @@ task runTopologySnoopy(type: JavaExec) {
         args = ["conf/topology-client.conf"]
     }
 }
+
+task runVpnDemo(type: JavaExec) {
+    description = 'Run the VPN Demo App'
+    classpath sourceSets.main.runtimeClasspath
+    main = "org.midonet.VpnDemo"
+}
