@@ -81,7 +81,7 @@ makens() {
         echo "no ip specified for interface (-l)"
         exit 1
     fi
-    DP=${NAME}_dp
+    DP=$NAME
     NS=${NAME}_ns
     ip netns add $NAME
     ip link add name $DP type veth peer name $NS
@@ -134,7 +134,7 @@ cleanns() {
     do
         kill -9 $pid
     done
-    ip link del ${NAME}_dp
+    ip link del $NAME
     ip netns del $NAME
 }
 

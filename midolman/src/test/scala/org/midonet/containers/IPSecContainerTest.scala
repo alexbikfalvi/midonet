@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.midonet.midolman.containers
+
+package org.midonet.containers
 
 import org.junit.runner.RunWith
 import org.scalatest._
@@ -23,14 +24,15 @@ import org.scalatest.junit.JUnitRunner
 import org.midonet.cluster.models.Commons
 import org.midonet.cluster.models.Neutron.IkePolicy.IkeVersion
 import org.midonet.cluster.models.Neutron._
-import org.midonet.containers._
-import org.midonet.packets.{IPv4Subnet, IPv4Addr}
+import org.midonet.midolman.topology.VirtualTopology
+import org.midonet.midolman.util.MidolmanSpec
+import org.midonet.packets.{IPv4Addr, IPv4Subnet}
 
 
 @RunWith(classOf[JUnitRunner])
-class IpsecServiceContainerTest extends FeatureSpec with Matchers with Eventually {
+class IPSecContainerTest extends MidolmanSpec with Matchers with Eventually {
 
-    val vpnService = new IpsecServiceDef("name", "/opt/stack/stuff",
+    val vpnService = new IPSecServiceDef("name", "/opt/stack/stuff",
                                          IPv4Addr.fromString("100.100.100.2"),
                                          "00:01:02:03:04:05",
                                          IPv4Subnet.fromCidr("1.0.0.0/24"),
@@ -70,6 +72,12 @@ class IpsecServiceContainerTest extends FeatureSpec with Matchers with Eventuall
                            .build())
         .build()
 
+    private var vt: VirtualTopology = _
+
+    protected override def beforeTest(): Unit = {
+        vt = injector.getInstance(classOf[VirtualTopology])
+    }
+
     feature("VpnServiceContainer writes contents of config files") {
         scenario("VpnServiceContainer creates config for single conn") {
             val expectedSecrets =
@@ -106,8 +114,8 @@ class IpsecServiceContainerTest extends FeatureSpec with Matchers with Eventuall
                    |    type=tunnel
                    |    lifetime=3600s
                    |""".stripMargin
-            val conn = new IpsecConnection(iPSecPolicy, ikePolicy, iPSecSiteConnection)
-            val conf = new IpsecServiceConfig("vpn-helper", vpnService, List(conn))
+            val conn = new IPSecConnection(iPSecPolicy, ikePolicy, iPSecSiteConnection)
+            val conf = new IPSecConfig("vpn-helper", vpnService, List(conn))
             val actualConf = conf.getConfigFileContents
             val actualSecrets = conf.getSecretsFileContents
 
@@ -173,7 +181,7 @@ class IpsecServiceContainerTest extends FeatureSpec with Matchers with Eventuall
                    |    type=tunnel
                    |    lifetime=3600s
                    |""".stripMargin
-            val conn = new IpsecConnection(iPSecPolicy, ikePolicy, iPSecSiteConnection)
+            val conn = new IPSecConnection(iPSecPolicy, ikePolicy, iPSecSiteConnection)
             val ipsecConn2 = IPSecSiteConnection.newBuilder()
                 .setAuthMode(IPSecSiteConnection.AuthMode.PSK)
                 .setDpdAction(IPSecSiteConnection.DpdAction.HOLD)
@@ -195,9 +203,9 @@ class IpsecServiceContainerTest extends FeatureSpec with Matchers with Eventuall
                     .setVersion(Commons.IPVersion.V4)
                     .build())
                 .build()
-            val secondConn = new IpsecConnection(iPSecPolicy, ikePolicy, ipsecConn2)
-            val conf = new IpsecServiceConfig("vpn-helper", vpnService,
-                                            List(conn, secondConn))
+            val secondConn = new IPSecConnection(iPSecPolicy, ikePolicy, ipsecConn2)
+            val conf = new IPSecConfig("vpn-helper", vpnService,
+                                       List(conn, secondConn))
             val actualConf = conf.getConfigFileContents
             expectedConf shouldBe actualConf
         }
@@ -205,28 +213,26 @@ class IpsecServiceContainerTest extends FeatureSpec with Matchers with Eventuall
 
     feature("Vpn script starts and stops") {
         scenario("commands are correctly executred") {
-            val conn = new IpsecConnection(iPSecPolicy, ikePolicy, iPSecSiteConnection)
-            val conf = new IpsecServiceConfig("vpn-helper", vpnService, List(conn))
-            TestVpnServiceContainter.start(conf)
-            TestVpnServiceContainter.cmdList(0) shouldBe
+            val conn = new IPSecConnection(iPSecPolicy, ikePolicy, iPSecSiteConnection)
+            val conf = new IPSecConfig("vpn-helper", vpnService, List(conn))
+            val container = new TestIPSecContainter(vt)
+            container.setup(conf)
+            container.cmdList(0) shouldBe
                 "vpn-helper makens -n name -g 1.1.1.1 -G 09:08:07:06:05:04 " +
                 "-l 100.100.100.2 -i 1.0.0.0/24 -m 00:01:02:03:04:05"
-            TestVpnServiceContainter.cmdList(1) shouldBe
-                "vpn-helper start_service -n name -p /opt/stack/stuff"
-            TestVpnServiceContainter.cmdList(2) shouldBe
+            container.cmdList(1) shouldBe "vpn-helper start_service -n name -p /opt/stack/stuff"
+            container.cmdList(2) shouldBe
                 "vpn-helper init_conns -n name -p /opt/stack/stuff -g 1.1.1.1 " +
                 "-c test_conn"
 
-            TestVpnServiceContainter.stop(conf)
+            container.cleanup(conf)
 
-            TestVpnServiceContainter.cmdList(3) shouldBe
-                "vpn-helper stop_service -n name -p /opt/stack/stuff"
-            TestVpnServiceContainter.cmdList(4) shouldBe
-                "vpn-helper cleanns -n name"
+            container.cmdList(3) shouldBe "vpn-helper stop_service -n name -p /opt/stack/stuff"
+            container.cmdList(4) shouldBe "vpn-helper cleanns -n name"
         }
     }
 
-    object TestVpnServiceContainter extends IpsecServiceContainerFunctions {
+    class TestIPSecContainter(vt: VirtualTopology) extends IPSecContainer(vt) {
         var cmdList = List[String]()
         override def execCmd(cmd: String) = {
             cmdList ++= List(cmd)
