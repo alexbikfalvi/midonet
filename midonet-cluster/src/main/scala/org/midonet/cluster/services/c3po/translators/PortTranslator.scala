@@ -547,8 +547,13 @@ class PortTranslator(protected val storage: ReadOnlyStorage,
         } catch {
             case nfe: NotFoundException if ignoreDeletedDhcp => None
         }
-        someDhcp filter(_.hasRouterIfPortId) map { dhcp =>
-            Gateway(nextHopGateway, dhcp, dhcp.getRouterIfPortId)
+        someDhcp filter(_.getRouterIfPortIdsCount > 0) flatMap { dhcp =>
+            dhcp.getRouterIfPortIdsList.asScala find { rPortId =>
+                val rPort = storage.get(classOf[Port], rPortId).await()
+                rPort.getPortAddress == nextHopGateway
+            } map { rPortId =>
+                Gateway(nextHopGateway, dhcp, rPortId)
+            }
         }
     }
 

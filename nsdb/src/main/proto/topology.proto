@@ -120,7 +120,7 @@ message Dhcp {
     // Backreferences
 
     // Router interface port associated with this DHCP.
-    optional UUID router_if_port_id = 101;
+    repeated UUID router_if_port_ids = 101;
 
     // Gateway routes with a gateway via this DHCP.
     repeated UUID gateway_route_ids = 102;
