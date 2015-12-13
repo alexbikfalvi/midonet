@@ -133,4 +133,8 @@ object MidonetMediaTypes {
     final val APPLICATION_TRACE_REQUEST_JSON = "application/vnd.org.midonet.TraceRequest-v1+json"
     final val APPLICATION_TRACE_REQUEST_COLLECTION_JSON = "application/vnd.org.midonet.collection.TraceRequest-v1+json"
 
+    // IPSec
+    final val APPLICATION_IKE_POLICY_JSON = "application/vnd.org.midonet.IkePolicy-v1+json"
+    final val APPLICATION_IKE_POLICY_COLLECTION_JSON = "application/vnd.org.midonet.collection.IkePolicy-v1+json"
+
 }

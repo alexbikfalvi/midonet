@@ -600,6 +600,22 @@ class MidonetApi(object):
         self._ensure_application()
         return self.app.delete_tracerequest(_id)
 
+    def add_ike_policy(self):
+        self._ensure_application()
+        return self.app.add_ike_policy()
+
+    def get_ike_policies(self):
+        self._ensure_application()
+        return self.app.get_ike_policies()
+
+    def get_ike_policy(self, id):
+        self._ensure_application()
+        return self.app.get_ike_policy(id)
+
+    def delete_ike_policy(self, id):
+        self._ensure_application()
+        return self.app.delete_ike_policy(id)
+
     def _ensure_application(self):
         if self.app is None:
             self.app = application.Application(None, {'uri': self.base_uri},

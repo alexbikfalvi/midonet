@@ -23,6 +23,7 @@ from midonetclient import chain
 from midonetclient import health_monitor
 from midonetclient import host
 from midonetclient import ip_addr_group
+from midonetclient import ike_policy
 from midonetclient import load_balancer
 from midonetclient import l2insertion
 from midonetclient import pool
@@ -108,6 +109,9 @@ class Application(resource_base.ResourceBase):
 
     def get_vtep_template(self):
         return self.dto['vtepTemplate']
+
+    def get_ike_policy_template(self):
+        return self.dto['ikePolicyTemplate']
 
     def get_write_version_uri(self):
         return self.dto['writeVersion']
@@ -597,3 +601,21 @@ class Application(resource_base.ResourceBase):
     def delete_tracerequest(self, _id):
         return self._delete_resource_by_id(self.get_tracerequest_template(),
                                            _id)
+
+    def get_ike_policies(self):
+        headers = {'Accept':
+                       vendor_media_type.APPLICATION_IKE_POLICY_COLLECTION_JSON}
+        return self.get_children(self.dto['ikePolicies'], {}, headers, ike_policy.IkePolicy)
+
+    def add_ike_policy(self):
+        return ike_policy.IkePolicy(self.dto['ikePolicies'], {}, self.auth)
+
+    def get_ike_policy(self, id):
+        return self._get_resource_by_id(ike_policy.IkePolicy,
+                                        self.dto['ikePolicies'],
+                                        self.get_ike_policy_template(),
+                                        id)
+
+    def delete_ike_policy(self, id):
+        return self._delete_resource_by_id(self.get_ike_policy_template(),
+                                           id)

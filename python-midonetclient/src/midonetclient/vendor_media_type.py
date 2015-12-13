@@ -187,6 +187,13 @@ APPLICATION_VTEP_PORT_JSON = \
 APPLICATION_VTEP_PORT_COLLECTION_JSON = \
     "application/vnd.org.midonet.collection.VTEPPort-v1+json"
 
+# IPSec
+APPLICATION_IKE_POLICY_JSON = \
+    "application/vnd.org.midonet.IkePolicy-v1+json"
+APPLICATION_IKE_POLICY_COLLECTION_JSON = \
+    "application/vnd.org.midonet.collection.IkePolicy-v1+json"
+
+
 # trace requests
 APPLICATION_TRACE_REQUEST_JSON = "application/vnd.org.midonet.TraceRequest-v1+json"
 APPLICATION_TRACE_REQUEST_COLLECTION_JSON = "application/vnd.org.midonet.collection.TraceRequest-v1+json"
