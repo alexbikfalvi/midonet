@@ -31,7 +31,6 @@ import org.midonet.cluster.data.ZoomField;
 import org.midonet.cluster.models.Neutron;
 import org.midonet.cluster.rest_api.ResourceUris;
 import org.midonet.cluster.util.IPSubnetUtil;
-import org.midonet.packets.IPSubnet;
 
 @ZoomClass(clazz = Neutron.IPSecSiteConnection.class)
 public class IPSecSiteConnection extends UriResource {
@@ -43,6 +42,7 @@ public class IPSecSiteConnection extends UriResource {
     public String tenantId;
 
     @ZoomField(name = "name")
+    @NotNull
     public String name;
 
     @ZoomField(name = "description")
@@ -52,12 +52,15 @@ public class IPSecSiteConnection extends UriResource {
     public boolean adminStateUp = true;
 
     @ZoomField(name = "peer_address")
+    @NotNull
     public String peerAddress;
 
     @ZoomField(name = "local_cidrs", converter = IPSubnetUtil.Converter.class)
+    @NotNull
     public List<String> localCidrs;
 
     @ZoomField(name = "peer_cidrs", converter = IPSubnetUtil.Converter.class)
+    @NotNull
     public List<String> peerCidrs;
 
     @ZoomField(name = "route_mode")
@@ -94,9 +97,11 @@ public class IPSecSiteConnection extends UriResource {
     public UUID vpnServiceId;
 
     @ZoomField(name = "ike_policy_id")
+    @NotNull
     public UUID ikePolicyId;
 
     @ZoomField(name = "ipsec_policy_id")
+    @NotNull
     public UUID ipsecPolicyId;
 
     @ZoomEnum(clazz = Neutron.IPSecSiteConnection.Status.class)

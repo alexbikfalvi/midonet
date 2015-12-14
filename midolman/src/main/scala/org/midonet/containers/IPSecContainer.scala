@@ -214,7 +214,7 @@ class IPSecContainer @Inject()(vt: VirtualTopology)
         log info s"Create IPSec container for $port"
 
         try {
-            val config = createConfig(port)
+            config = createConfig(port)
             setup(config)
 
             healthSubject onNext ContainerHealth(Code.RUNNING,

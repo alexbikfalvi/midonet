@@ -89,6 +89,10 @@ public class Router extends UriResource {
     @ZoomField(name = "local_redirect_chain_id")
     public UUID localRedirectChainId;
 
+    @JsonIgnore
+    @ZoomField(name = "vpn_service_id")
+    public UUID vpnServiceId;
+
     public Router() {
         adminStateUp = true;
     }
@@ -155,6 +159,7 @@ public class Router extends UriResource {
         bgpNetworkIds = from.bgpNetworkIds;
         bgpPeerIds = from.bgpPeerIds;
         traceRequestIds = from.traceRequestIds;
+        vpnServiceId = from.vpnServiceId;
     }
 
     @Override

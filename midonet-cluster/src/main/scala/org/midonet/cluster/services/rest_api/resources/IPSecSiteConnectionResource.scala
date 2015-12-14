@@ -72,12 +72,16 @@ class IPSecSiteConnectionResource @Inject()(resContext: ResourceContext)
     protected override def deleteFilter(id: String,
                                         tx: ResourceTransaction): Unit = {
         val connectionId = UUID.fromString(id)
+        val ipsecConnection = tx.get(classOf[IPSecSiteConnection], connectionId)
+        val vpnService = tx.get(classOf[VpnService], ipsecConnection.vpnServiceId)
+        val router = tx.tx.get(classOf[Router], vpnService.routerId)
 
         tx.delete(classOf[IPSecSiteConnection], id)
         tx.tx.delete(classOf[ServiceContainer], vpnContainerId(connectionId))
         tx.tx.delete(classOf[ServiceContainerGroup], vpnContainerGroupId(connectionId))
         tx.tx.delete(classOf[Chain], vpnChainId(connectionId))
         tx.tx.delete(classOf[Port], vpnPortId(connectionId))
+        tx.tx.update(router.toBuilder.clearLocalRedirectChainId().build())
 
     }
 
