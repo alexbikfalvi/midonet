@@ -51,6 +51,8 @@ public class ServiceContainer extends UriResource {
     @ZoomField(name = "port_id")
     public UUID portId;
 
+    public UUID hostId;
+
     @NotNull
     @ZoomField(name = "service_type")
     public String serviceType;
@@ -68,6 +70,14 @@ public class ServiceContainer extends UriResource {
         return absoluteUri(ResourceUris.PORTS, portId);
     }
 
+    public URI getServiceContainerGroup() {
+        return absoluteUri(SERVICE_CONTAINER_GROUPS, serviceGroupId);
+    }
+
+    public URI getSchedule() {
+        return relativeUri(ResourceUris.SCHEDULE);
+    }
+
     @JsonIgnore
     @Override
     public void create() {
@@ -80,11 +90,6 @@ public class ServiceContainer extends UriResource {
     public int hashCode() {
         return Objects.hash(id, serviceType, serviceGroupId, configurationId,
                             portId);
-    }
-
-    public URI getServiceContainerGroup() {
-        return absoluteUri(SERVICE_CONTAINER_GROUPS,
-                           serviceGroupId);
     }
 
     public boolean equals(Object that) {

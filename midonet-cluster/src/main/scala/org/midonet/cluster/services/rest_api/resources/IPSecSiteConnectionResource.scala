@@ -194,7 +194,7 @@ class VpnServiceIPSecSiteConnectionResource(vpnServiceId: UUID,
             .setId(vpnContainerId(ipsecConnection.id).asProto)
             .setServiceType("IPSEC")
             .setServiceGroupId(group.getId)
-            .setConfigurationId(vpnService.id.asProto)
+            .setConfigurationId(ipsecConnection.id.asProto)
             .setPortId(port.getId).build()
         tx.tx.create(container)
     }

@@ -1815,6 +1815,12 @@ class ServiceContainer(ObjectType):
                                  value_type = StringType(),
                                  getter = 'get_service_type',
                                  setter = 'service_type'))
+        self.put_attr(SingleAttr(name = 'host',
+                                 value_type = ObjectRef('host'),
+                                 getter = 'get_host_id',
+                                 setter = 'schedule',
+                                 unsetter = 'unschedule',
+                                 optional = True))
 
     def type_name(self):
         return "container"

@@ -53,3 +53,21 @@ class ServiceContainer(resource_base.ResourceBase):
     def port_id(self, port_id):
         self.dto['portId'] = port_id
         return self
+
+    def get_host_id(self):
+        return self.dto['hostId']
+
+    def schedule(self, host_id):
+        self.dto['hostId'] = host_id
+        headers = {'Content-Type':
+                       vendor_media_type.APPLICATION_SERVICE_CONTAINER_SCHEDULE_JSON}
+        self.auth.do_request(self.dto['schedule'], 'POST', self.dto,
+                             headers=headers)
+
+        self.get()
+        return self
+
+    def unschedule(self):
+        self.auth.do_request(self.dto['schedule'], 'DELETE')
+        self.get()
+        return self
