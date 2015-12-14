@@ -383,7 +383,6 @@ message IPSecSiteConnection {
     optional bool admin_state_up = 5;
     optional string peer_address = 6;
     optional string peer_id = 7;
-    optional IPAddress external_ip = 8;
     repeated IPSubnet local_cidrs = 9;
     repeated IPSubnet peer_cidrs = 10;
     optional RouteMode route_mode = 11;

@@ -15,14 +15,12 @@
  */
 package org.midonet.cluster.util
 
-import java.lang.reflect.Type
 import java.nio.ByteBuffer
 import java.util.{UUID => JUUID, ArrayList => JArrayList}
 import javax.annotation.Nonnull
 
 import scala.collection.JavaConverters._
 
-import org.midonet.cluster.data.ZoomConvert
 import org.midonet.cluster.models.Commons
 import org.midonet.cluster.models.Commons.{UUID => PUUID}
 

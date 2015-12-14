@@ -2355,6 +2355,9 @@ class RouterPort(ObjectType):
                                  setter = 'outbound_mirrors',
                                  unsetter = 'outbound_mirrors',
                                  optional = True))
+        self.put_attr(SingleAttr(name = 'service-container',
+                                 value_type = ObjectRef('container'),
+                                 getter = 'get_service_container_id'))
 
 
 # L4LB features

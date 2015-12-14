@@ -67,7 +67,6 @@ public class RouterPort extends Port {
     @ZoomField(name = "route_ids")
     public List<UUID> routeIds;
 
-    @JsonIgnore
     @ZoomField(name = "service_container_id")
     public UUID serviceContainerId;
 
