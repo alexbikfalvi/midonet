@@ -193,6 +193,11 @@ APPLICATION_IKE_POLICY_JSON = \
 APPLICATION_IKE_POLICY_COLLECTION_JSON = \
     "application/vnd.org.midonet.collection.IkePolicy-v1+json"
 
+APPLICATION_IPSEC_POLICY_JSON = \
+    "application/vnd.org.midonet.IPSecPolicy-v1+json"
+APPLICATION_IPSEC_POLICY_COLLECTION_JSON = \
+    "application/vnd.org.midonet.collection.IPSecPolicy-v1+json"
+
 
 # trace requests
 APPLICATION_TRACE_REQUEST_JSON = "application/vnd.org.midonet.TraceRequest-v1+json"

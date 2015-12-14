@@ -137,4 +137,7 @@ object MidonetMediaTypes {
     final val APPLICATION_IKE_POLICY_JSON = "application/vnd.org.midonet.IkePolicy-v1+json"
     final val APPLICATION_IKE_POLICY_COLLECTION_JSON = "application/vnd.org.midonet.collection.IkePolicy-v1+json"
 
+    final val APPLICATION_IPSEC_POLICY_JSON = "application/vnd.org.midonet.IpSecPolicy-v1+json"
+    final val APPLICATION_IPSEC_POLICY_COLLECTION_JSON = "application/vnd.org.midonet.collection.IpSecPolicy-v1+json"
+
 }

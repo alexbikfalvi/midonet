@@ -2710,7 +2710,7 @@ class IkePolicy(ObjectType):
                                mappings = {'SHA1': 'sha1'},
                                getter = 'get_auth_algorithm',
                                setter = 'auth_algorithm',
-                               optional = False))
+                               optional = True))
         self.put_attr(EnumAttr(name = 'encryption',
                                mappings = {'DES_3': 'des3',
                                            'AES_128': 'aes128',
@@ -2723,7 +2723,7 @@ class IkePolicy(ObjectType):
                                mappings = {'MAIN': 'main'},
                                getter = 'get_phase1_negotiation_mode',
                                setter = 'phase1_negotiation_mode',
-                               optional = False))
+                               optional = True))
         self.put_attr(EnumAttr(name = 'version',
                                mappings = {'V1': 'v1',
                                            'V2': 'v2'},
@@ -2744,6 +2744,60 @@ class IkePolicy(ObjectType):
 
     def type_name(self):
         return "ike-policy"
+
+
+class IPSecPolicy(ObjectType):
+    def __init__(self, obj):
+        super(IPSecPolicy, self).__init__(obj)
+
+        self.put_attr(SingleAttr(name = 'name',
+                                 value_type = StringType(),
+                                 getter = 'get_name',
+                                 setter = 'name'))
+        self.put_attr(SingleAttr(name = 'description',
+                                 value_type = StringType(),
+                                 getter = 'get_description',
+                                 setter = 'description'))
+        self.put_attr(EnumAttr(name = 'protocol',
+                               mappings = {'ESP': 'esp',
+                                           'AH': 'ah',
+                                           'AH_ESP': 'ah-esp'},
+                               getter = 'get_transform_protocol',
+                               setter = 'transform_protocol',
+                               optional = False))
+        self.put_attr(EnumAttr(name = 'auth',
+                               mappings = {'SHA1': 'sha1'},
+                               getter = 'get_auth_algorithm',
+                               setter = 'auth_algorithm',
+                               optional = True))
+        self.put_attr(EnumAttr(name = 'encryption',
+                               mappings = {'DES_3': 'des3',
+                                           'AES_128': 'aes128',
+                                           'AES_196': 'aes196',
+                                           'AES_256': 'aes256'},
+                               getter = 'get_encryption_algorithm',
+                               setter = 'encryption_algorithm',
+                               optional = False))
+        self.put_attr(EnumAttr(name = 'encapsulation',
+                               mappings = {'TUNNEL': 'tunnel',
+                                           'TRANSPORT': 'transport'},
+                               getter = 'get_encapsulation_mode',
+                               setter = 'encapsulation_mode',
+                               optional = False))
+        self.put_attr(SingleAttr(name = 'lifetime',
+                                 value_type = StringType(),
+                                 getter = 'get_lifetime_value',
+                                 setter = 'lifetime_value'))
+        self.put_attr(EnumAttr(name = 'pfs',
+                               mappings = {'GROUP_2': 'group2',
+                                           'GROUP_5': 'group5',
+                                           'GROUP_14': 'group14'},
+                               getter = 'get_pfs',
+                               setter = 'pfs',
+                               optional = False))
+
+    def type_name(self):
+        return "ipsec-policy"
 
 def _port_resolver(port):
     # This function dispatches the appropriate port class depending on the
@@ -2872,6 +2926,11 @@ class Midonet(ObjectType):
                                  list_method = 'get_ike_policies',
                                  getter = 'get_ike_policy',
                                  factory_method = 'add_ike_policy'))
+        self.put_attr(Collection(name = 'ipsec-policy',
+                                 element_type = IPSecPolicy,
+                                 list_method = 'get_ipsec_policies',
+                                 getter = 'get_ipsec_policy',
+                                 factory_method = 'add_ipsec_policy'))
 
 ################################################################################
 # Grammar tokens

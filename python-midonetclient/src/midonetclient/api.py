@@ -616,6 +616,22 @@ class MidonetApi(object):
         self._ensure_application()
         return self.app.delete_ike_policy(id)
 
+    def add_ipsec_policy(self):
+        self._ensure_application()
+        return self.app.add_ipsec_policy()
+
+    def get_ipsec_policies(self):
+        self._ensure_application()
+        return self.app.get_ipsec_policies()
+
+    def get_ipsec_policy(self, id):
+        self._ensure_application()
+        return self.app.get_ipsec_policy(id)
+
+    def delete_ipsec_policy(self, id):
+        self._ensure_application()
+        return self.app.delete_ipsec_policy(id)
+
     def _ensure_application(self):
         if self.app is None:
             self.app = application.Application(None, {'uri': self.base_uri},

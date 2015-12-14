@@ -22,8 +22,9 @@ from midonetclient import mirror
 from midonetclient import chain
 from midonetclient import health_monitor
 from midonetclient import host
-from midonetclient import ip_addr_group
 from midonetclient import ike_policy
+from midonetclient import ip_addr_group
+from midonetclient import ipsec_policy
 from midonetclient import load_balancer
 from midonetclient import l2insertion
 from midonetclient import pool
@@ -112,6 +113,9 @@ class Application(resource_base.ResourceBase):
 
     def get_ike_policy_template(self):
         return self.dto['ikePolicyTemplate']
+
+    def get_ipsec_policy_template(self):
+        return self.dto['ipsecPolicyTemplate']
 
     def get_write_version_uri(self):
         return self.dto['writeVersion']
@@ -618,4 +622,22 @@ class Application(resource_base.ResourceBase):
 
     def delete_ike_policy(self, id):
         return self._delete_resource_by_id(self.get_ike_policy_template(),
+                                           id)
+
+    def get_ipsec_policies(self):
+        headers = {'Accept':
+                       vendor_media_type.APPLICATION_IPSEC_POLICY_COLLECTION_JSON}
+        return self.get_children(self.dto['ipsecPolicies'], {}, headers, ipsec_policy.IPSecPolicy)
+
+    def add_ipsec_policy(self):
+        return ipsec_policy.IPSecPolicy(self.dto['ipsecPolicies'], {}, self.auth)
+
+    def get_ipsec_policy(self, id):
+        return self._get_resource_by_id(ipsec_policy.IPSecPolicy,
+                                        self.dto['ipsecPolicies'],
+                                        self.get_ipsec_policy_template(),
+                                        id)
+
+    def delete_ipsec_policy(self, id):
+        return self._delete_resource_by_id(self.get_ipsec_policy_template(),
                                            id)
