@@ -2745,7 +2745,6 @@ class IkePolicy(ObjectType):
     def type_name(self):
         return "ike-policy"
 
-
 class IPSecPolicy(ObjectType):
     def __init__(self, obj):
         super(IPSecPolicy, self).__init__(obj)
@@ -2798,6 +2797,39 @@ class IPSecPolicy(ObjectType):
 
     def type_name(self):
         return "ipsec-policy"
+
+class VpnService(ObjectType):
+    def __init__(self, obj):
+        super(VpnService, self).__init__(obj)
+
+        self.put_attr(SingleAttr(name = 'name',
+                                 value_type = StringType(),
+                                 getter = 'get_name',
+                                 setter = 'name'))
+        self.put_attr(SingleAttr(name = 'description',
+                                 value_type = StringType(),
+                                 getter = 'get_description',
+                                 setter = 'description'))
+        self.put_attr(AdminStateAttr(name='state',
+                                     getter = 'get_admin_state_up',
+                                     setter = 'admin_state_up'))
+        self.put_attr(SingleAttr(name='status',
+                                 value_type = StringType(),
+                                 getter = 'get_status'))
+        self.put_attr(SingleAttr(name = 'router',
+                                 value_type = ObjectRef('router'),
+                                 getter = 'get_router_id',
+                                 setter = 'router_id',
+                                 unsetter = 'router_id',
+                                 optional = False))
+        self.put_attr(SingleAttr(name = 'external-address',
+                                 value_type = IPv4Address(),
+                                 getter = 'get_external_v4_ip',
+                                 setter = 'external_v4_ip',
+                                 optional = False))
+
+    def type_name(self):
+        return "vpn"
 
 def _port_resolver(port):
     # This function dispatches the appropriate port class depending on the
@@ -2931,6 +2963,11 @@ class Midonet(ObjectType):
                                  list_method = 'get_ipsec_policies',
                                  getter = 'get_ipsec_policy',
                                  factory_method = 'add_ipsec_policy'))
+        self.put_attr(Collection(name = 'vpn',
+                                 element_type = VpnService,
+                                 list_method = 'get_vpn_services',
+                                 getter = 'get_vpn_service',
+                                 factory_method = 'add_vpn_service'))
 
 ################################################################################
 # Grammar tokens

@@ -140,4 +140,7 @@ object MidonetMediaTypes {
     final val APPLICATION_IPSEC_POLICY_JSON = "application/vnd.org.midonet.IpSecPolicy-v1+json"
     final val APPLICATION_IPSEC_POLICY_COLLECTION_JSON = "application/vnd.org.midonet.collection.IpSecPolicy-v1+json"
 
+    final val APPLICATION_VPN_SERVICE_JSON = "application/vnd.org.midonet.VpnService-v1+json"
+    final val APPLICATION_VPN_SERVICE_COLLECTION_JSON = "application/vnd.org.midonet.collection.VpnService-v1+json"
+
 }

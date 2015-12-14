@@ -44,6 +44,7 @@ from midonetclient import tunnel_zone
 from midonetclient import tracerequest
 from midonetclient import vendor_media_type
 from midonetclient import vip
+from midonetclient import vpn_service
 from midonetclient import vtep
 
 import uuid
@@ -116,6 +117,9 @@ class Application(resource_base.ResourceBase):
 
     def get_ipsec_policy_template(self):
         return self.dto['ipsecPolicyTemplate']
+
+    def get_vpn_service_template(self):
+        return self.dto['vpnServiceTemplate']
 
     def get_write_version_uri(self):
         return self.dto['writeVersion']
@@ -640,4 +644,22 @@ class Application(resource_base.ResourceBase):
 
     def delete_ipsec_policy(self, id):
         return self._delete_resource_by_id(self.get_ipsec_policy_template(),
+                                           id)
+
+    def get_vpn_services(self):
+        headers = {'Accept':
+                       vendor_media_type.APPLICATION_VPN_SERVICE_COLLECTION_JSON}
+        return self.get_children(self.dto['vpnServices'], {}, headers, vpn_service.VpnService)
+
+    def add_vpn_service(self):
+        return vpn_service.VpnService(self.dto['vpnServices'], {}, self.auth)
+
+    def get_vpn_service(self, id):
+        return self._get_resource_by_id(vpn_service.VpnService,
+                                        self.dto['vpnServices'],
+                                        self.get_vpn_service_template(),
+                                        id)
+
+    def delete_vpn_service(self, id):
+        return self._delete_resource_by_id(self.get_vpn_service_template(),
                                            id)

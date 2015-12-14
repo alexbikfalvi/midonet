@@ -198,6 +198,11 @@ APPLICATION_IPSEC_POLICY_JSON = \
 APPLICATION_IPSEC_POLICY_COLLECTION_JSON = \
     "application/vnd.org.midonet.collection.IPSecPolicy-v1+json"
 
+APPLICATION_VPN_SERVICE_JSON = \
+    "application/vnd.org.midonet.VpnService-v1+json"
+APPLICATION_VPN_SERVICE_COLLECTION_JSON = \
+    "application/vnd.org.midonet.collection.VpnService-v1+json"
+
 
 # trace requests
 APPLICATION_TRACE_REQUEST_JSON = "application/vnd.org.midonet.TraceRequest-v1+json"

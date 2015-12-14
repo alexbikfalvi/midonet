@@ -319,6 +319,8 @@ message VpnService {
     optional string status = 8;
     optional IPAddress external_v4_ip = 9;
     optional IPAddress external_v6_ip = 10;
+
+    repeated UUID ipsec_site_connection_ids = 101;
 }
 
 message IkePolicy {
@@ -398,7 +400,6 @@ message IPSecSiteConnection {
 
     optional UUID ipsec_policy_id = 23;
     optional IPSecPolicy ipsec_policy = 24;
-
 
     enum Status {
         ACTIVE = 1;

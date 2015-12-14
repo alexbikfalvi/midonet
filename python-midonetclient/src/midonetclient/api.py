@@ -632,6 +632,22 @@ class MidonetApi(object):
         self._ensure_application()
         return self.app.delete_ipsec_policy(id)
 
+    def add_vpn_service(self):
+        self._ensure_application()
+        return self.app.add_vpn_service()
+
+    def get_vpn_services(self):
+        self._ensure_application()
+        return self.app.get_vpn_services()
+
+    def get_vpn_service(self, id):
+        self._ensure_application()
+        return self.app.get_vpn_service(id)
+
+    def delete_vpn_service(self, id):
+        self._ensure_application()
+        return self.app.delete_vpn_service(id)
+
     def _ensure_application(self):
         if self.app is None:
             self.app = application.Application(None, {'uri': self.base_uri},
