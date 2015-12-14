@@ -143,4 +143,7 @@ object MidonetMediaTypes {
     final val APPLICATION_VPN_SERVICE_JSON = "application/vnd.org.midonet.VpnService-v1+json"
     final val APPLICATION_VPN_SERVICE_COLLECTION_JSON = "application/vnd.org.midonet.collection.VpnService-v1+json"
 
+    final val APPLICATION_IPSEC_SITE_CONNECTION_JSON = "application/vnd.org.midonet.IpSecSiteConnection-v1+json"
+    final val APPLICATION_IPSEC_SITE_CONNECTION_COLLECTION_JSON = "application/vnd.org.midonet.collection.IpSecSiteConnection-v1+json"
+
 }

@@ -40,6 +40,7 @@ public final class ResourceUris {
     public static final String INTERFACES = "interfaces";
     public static final String IKE_POLICIES = "ike_policies";
     public static final String IPSEC_POLICIES = "ipsec_policies";
+    public static final String IPSEC_CONNECTIONS = "ipsec_connections";
     public static final String IP_ADDRS = "ip_addrs";
     public static final String IP_ADDR_GROUPS = "ip_addr_groups";
     public static final String LINK = "link";

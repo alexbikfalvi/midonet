@@ -233,6 +233,16 @@ object MidonetBackend {
         store.declareBinding(classOf[Port], "trace_request_ids", CASCADE,
                              classOf[TraceRequest], "port_id", CLEAR)
 
+        store.declareBinding(classOf[VpnService], "router_id", CLEAR,
+                             classOf[Router], "vpn_service_id", CASCADE)
+        store.declareBinding(classOf[VpnService], "ipsec_site_connection_ids", CASCADE,
+                             classOf[IPSecSiteConnection], "vpn_service_id", CLEAR)
+
+        store.declareBinding(classOf[IPSecSiteConnection], "ike_policy_id", CLEAR,
+                             classOf[IkePolicy], "ipsec_site_connection_ids", CLEAR)
+        store.declareBinding(classOf[IPSecSiteConnection], "ipsec_policy_id", CLEAR,
+                             classOf[IPSecPolicy], "ipsec_site_connection_ids", CLEAR)
+
         stateStore.registerKey(classOf[ServiceContainer], StatusKey, SingleLastWriteWins)
         stateStore.registerKey(classOf[Host], AliveKey, SingleLastWriteWins)
         stateStore.registerKey(classOf[Host], ContainerKey, SingleLastWriteWins)

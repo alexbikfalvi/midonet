@@ -13,6 +13,7 @@
 # under the License.
 
 from midonetclient import admin_state_up_mixin
+from midonetclient import ipsec_site_connection
 from midonetclient import resource_base
 from midonetclient import vendor_media_type
 
@@ -51,6 +52,11 @@ class VpnService(resource_base.ResourceBase,
     def get_external_v6_ip(self):
         return self.dto['externalV6Ip']
 
+    def get_ipsec_connections(self, query=None):
+        headers = {'Accept': vendor_media_type.APPLICATION_IPSEC_SITE_CONNECTION_COLLECTION_JSON }
+        return self.get_children(self.dto['ipsecConnections'], query, headers,
+                                 ipsec_site_connection.IPSecSiteConnection)
+
     def name(self, name):
         self.dto['name'] = name
         return self
@@ -75,3 +81,6 @@ class VpnService(resource_base.ResourceBase,
         self.dto['externalV6Ip'] = external_v6_ip
         return self
 
+    def add_ipsec_connection(self):
+        return ipsec_site_connection.IPSecSiteConnection(self.dto['ipsecConnections'],
+                                                         {}, self.auth)

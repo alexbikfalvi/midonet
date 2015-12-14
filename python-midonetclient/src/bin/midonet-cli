@@ -2827,9 +2827,122 @@ class VpnService(ObjectType):
                                  getter = 'get_external_v4_ip',
                                  setter = 'external_v4_ip',
                                  optional = False))
+        self.put_attr(Collection(name='ipsec-connection',
+                                 element_type=IPSecSiteConnection,
+                                 list_method='get_ipsec_connections',
+                                 getter='get_ipsec_connection',
+                                 factory_method='add_ipsec_connection'))
 
     def type_name(self):
         return "vpn"
+
+class IPSecSiteConnection(ObjectType):
+    def __init__(self, obj):
+        super(IPSecSiteConnection, self).__init__(obj)
+
+        self.put_attr(SingleAttr(name = 'name',
+                                 value_type = StringType(),
+                                 getter = 'get_name',
+                                 setter = 'name'))
+        self.put_attr(SingleAttr(name = 'description',
+                                 value_type = StringType(),
+                                 getter = 'get_description',
+                                 setter = 'description'))
+        self.put_attr(AdminStateAttr(name='state',
+                                     getter = 'get_admin_state_up',
+                                     setter = 'admin_state_up'))
+        self.put_attr(SingleAttr(name='status',
+                                 value_type = StringType(),
+                                 getter = 'get_status'))
+        self.put_attr(SingleAttr(name = 'peer-address',
+                                 value_type = IPv4Address(),
+                                 getter = 'get_peer_address',
+                                 setter = 'peer_address',
+                                 optional = False))
+        self.put_attr(ListAttr(name = 'local-cidr',
+                               element_type = StringType(),
+                               getter = 'get_local_cidrs',
+                               setter = 'local_cidrs',
+                               unsetter = 'local_cidrs',
+                               optional = False))
+        self.put_attr(ListAttr(name = 'peer-cidr',
+                               element_type = StringType(),
+                               getter = 'get_peer_cidrs',
+                               setter = 'peer_cidrs',
+                               unsetter = 'peer_cidrs',
+                               optional = False))
+        self.put_attr(EnumAttr(name = 'route-mode',
+                               mappings = {'STATIC': 'static'},
+                               getter = 'get_route_mode',
+                               setter = 'route_mode',
+                               optional = False))
+        self.put_attr(SingleAttr(name = 'mtu',
+                                 value_type = StringType(),
+                                 getter = 'get_mtu',
+                                 setter = 'mtu',
+                                 optional = True))
+        self.put_attr(EnumAttr(name = 'initiator',
+                               mappings = {'BI_DIRECTIONAL': 'bidirectional',
+                                           'RESPONSE_ONLY': 'response'},
+                               getter = 'get_initiator',
+                               setter = 'initiator',
+                               optional = False))
+        self.put_attr(EnumAttr(name = 'auth',
+                               mappings = {'PSK': 'psk'},
+                               getter = 'get_auth_mode',
+                               setter = 'auth_mode',
+                               optional = True))
+        self.put_attr(SingleAttr(name='psk',
+                                 value_type = StringType(),
+                                 getter = 'get_psk',
+                                 setter = 'psk',
+                                 optional = False))
+        self.put_attr(EnumAttr(name = 'dpd-action',
+                               mappings = {'CLEAR': 'clear',
+                                           'HOLD': 'hold',
+                                           'RESTART': 'restart',
+                                           'DISABLED': 'disabled',
+                                           'RESTART_BY_PEER': 'restart-by-peer'},
+                               getter = 'get_dpd_action',
+                               setter = 'dpd_action',
+                               optional = False))
+        self.put_attr(SingleAttr(name='dpd-interval',
+                                 value_type = StringType(),
+                                 getter = 'get_dpd_interval',
+                                 setter = 'dpd_interval',
+                                 optional = False))
+        self.put_attr(SingleAttr(name='dpd-timeout',
+                                 value_type = StringType(),
+                                 getter = 'get_dpd_timeout',
+                                 setter = 'dpd_timeout',
+                                 optional = False))
+        self.put_attr(SingleAttr(name = 'ike-policy',
+                                 value_type = ObjectRef('ike-policy'),
+                                 getter = 'get_ike_policy_id',
+                                 setter = 'ike_policy_id',
+                                 unsetter = 'ike_policy_id',
+                                 optional = False))
+        self.put_attr(SingleAttr(name = 'ipsec-policy',
+                                 value_type = ObjectRef('ipsec-policy'),
+                                 getter = 'get_ipsec_policy_id',
+                                 setter = 'ipsec_policy_id',
+                                 unsetter = 'ipsec_policy_id',
+                                 optional = False))
+
+    def type_name(self):
+            return "ipsec-connection"
+
+class IpSecSiteConnectionCidr(ObjectType):
+    def type_name(self):
+        return "cidr"
+
+    def __init__(self, obj):
+        ObjectType.__init__(self, obj)
+        self.clear_attrs()
+        self.put_attr(SingleAttr(name = 'cidr',
+                                 value_type = StringType(),
+                                 getter = 'get_cidr',
+                                 setter = 'cidr'))
 
 def _port_resolver(port):
     # This function dispatches the appropriate port class depending on the

@@ -74,6 +74,10 @@ public class VpnService extends UriResource {
         return absoluteUri(ResourceUris.ROUTERS, routerId);
     }
 
+    public URI getIpsecConnections() {
+        return relativeUri(ResourceUris.IPSEC_CONNECTIONS);
+    }
+
     @Override
     @JsonIgnore
     public void create() {

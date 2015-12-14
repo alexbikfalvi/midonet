@@ -25,6 +25,7 @@ from midonetclient import host
 from midonetclient import ike_policy
 from midonetclient import ip_addr_group
 from midonetclient import ipsec_policy
+from midonetclient import ipsec_site_connection
 from midonetclient import load_balancer
 from midonetclient import l2insertion
 from midonetclient import pool
@@ -120,6 +121,9 @@ class Application(resource_base.ResourceBase):
 
     def get_vpn_service_template(self):
         return self.dto['vpnServiceTemplate']
+
+    def get_ipsec_connection_template(self):
+        return self.dto['ipsecConnectionsTemplate']
 
     def get_write_version_uri(self):
         return self.dto['writeVersion']
@@ -662,4 +666,14 @@ class Application(resource_base.ResourceBase):
 
     def delete_vpn_service(self, id):
         return self._delete_resource_by_id(self.get_vpn_service_template(),
+                                           id)
+
+    def get_ipsec_connection(self, id):
+        return self._get_resource_by_id(ipsec_site_connection.IPSecSiteConnection,
+                                        self.dto['ipsecConnections'],
+                                        self.get_ipsec_connection_template(),
+                                        id)
+
+    def delete_ipsec_connection(self, id):
+        return self._delete_resource_by_id(self.get_ipsec_connection_template(),
                                            id)

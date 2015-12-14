@@ -203,6 +203,11 @@ APPLICATION_VPN_SERVICE_JSON = \
 APPLICATION_VPN_SERVICE_COLLECTION_JSON = \
     "application/vnd.org.midonet.collection.VpnService-v1+json"
 
+APPLICATION_IPSEC_SITE_CONNECTION_JSON = \
+    "application/vnd.org.midonet.IpSecSiteConnection-v1+json"
+APPLICATION_IPSEC_SITE_CONNECTION_COLLECTION_JSON = \
+    "application/vnd.org.midonet.collection.IpSecSiteConnection-v1+json"
+
 
 # trace requests
 APPLICATION_TRACE_REQUEST_JSON = "application/vnd.org.midonet.TraceRequest-v1+json"

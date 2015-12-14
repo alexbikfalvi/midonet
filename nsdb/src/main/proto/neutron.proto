@@ -336,6 +336,8 @@ message IkePolicy {
     optional uint32 lifetime_value = 10;
     optional IPSecPfs pfs = 11;
 
+    repeated UUID ipsec_site_connection_ids = 101;
+
     enum Phase1NegotiationMode {
         MAIN = 1;
     }
@@ -358,6 +360,8 @@ message IPSecPolicy {
     optional IPSecPfs pfs = 9;
     optional string lifetime_units = 10;
     optional uint32 lifetime_value = 11;
+
+    repeated UUID ipsec_site_connection_ids = 101;
 
     enum TransformProtocol {
         ESP = 1;
@@ -394,12 +398,8 @@ message IPSecSiteConnection {
     optional uint32 dpd_timeout = 19; // milliseconds
 
     optional UUID vpn_service_id = 20;
-
     optional UUID ike_policy_id = 21;
-    optional IkePolicy ike_policy = 22;
-
-    optional UUID ipsec_policy_id = 23;
-    optional IPSecPolicy ipsec_policy = 24;
+    optional UUID ipsec_policy_id = 22;
 
     enum Status {
         ACTIVE = 1;

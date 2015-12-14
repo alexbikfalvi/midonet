@@ -16,7 +16,9 @@
 
 package org.midonet.cluster.services.rest_api.resources
 
-import javax.ws.rs.Path
+import java.util.UUID
+
+import javax.ws.rs.{PathParam, Path}
 import javax.ws.rs.core.MediaType._
 
 import com.google.inject.Inject
@@ -46,4 +48,10 @@ class VpnServiceResource @Inject()(resContext: ResourceContext)
                                         tx: ResourceTransaction): Unit = {
         to.update(from)
     }
+
+    @Path("{id}/ipsec_connections")
+    def connections(@PathParam("id") id: UUID): VpnServiceIPSecSiteConnectionResource = {
+        new VpnServiceIPSecSiteConnectionResource(id, resContext)
+    }
+
 }
