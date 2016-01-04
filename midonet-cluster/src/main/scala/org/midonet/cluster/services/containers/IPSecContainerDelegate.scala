@@ -27,26 +27,30 @@ import scala.util.control.NonFatal
 import com.google.inject.Inject
 import com.typesafe.scalalogging.Logger
 
+import org.apache.curator.framework.recipes.locks.InterProcessSemaphoreMutex
 import org.slf4j.LoggerFactory
 
-import org.midonet.cluster.containersLog
 import org.midonet.cluster.data.storage.{NotFoundException, Transaction}
 import org.midonet.cluster.models.State.ContainerStatus
 import org.midonet.cluster.models.Topology.{Host, Port, ServiceContainer}
 import org.midonet.cluster.services.MidonetBackend
 import org.midonet.cluster.services.containers.IPSecContainerDelegate.MaxStorageAttempts
 import org.midonet.cluster.util.UUIDUtil._
+import org.midonet.cluster.{ClusterConfig, ZookeeperLockFactory, containersLog}
 import org.midonet.containers.{Container, Containers}
+import org.midonet.midolman.state.PathBuilder
 
 object IPSecContainerDelegate {
     final val MaxStorageAttempts = 10
 }
 
 @Container(name = Containers.IPSEC_CONTAINER, version = 1)
-class IPSecContainerDelegate @Inject()(backend: MidonetBackend)
+class IPSecContainerDelegate @Inject()(backend: MidonetBackend,
+                                       config: ClusterConfig)
     extends ContainerDelegate {
 
     private val log = Logger(LoggerFactory.getLogger(s"$containersLog.ipsec"))
+    private val paths = new PathBuilder(config.backend.rootKey)
 
     /** This method is called when the container is scheduled at a specified
       * host. It binds the container port to the host
@@ -130,7 +134,7 @@ class IPSecContainerDelegate @Inject()(backend: MidonetBackend)
 
     private def tryTx(f: (Transaction) => Unit)
                      (implicit handler: PartialFunction[Throwable, Unit] =
-                         PartialFunction.empty): Unit = {
+                         PartialFunction.empty): Unit = withLock {
         var attempt = 1
         var last: Throwable = null
         while (attempt < MaxStorageAttempts) {
@@ -151,6 +155,20 @@ class IPSecContainerDelegate @Inject()(backend: MidonetBackend)
             }
         }
         throw last
+    }
+
+    protected def withLock(f: => Unit): Unit = {
+        val lock = new InterProcessSemaphoreMutex(
+            backend.curator,
+            paths.getLockPath(ZookeeperLockFactory.ZOOM_TOPOLOGY))
+        try lock.acquire() catch {
+            case NonFatal(e) =>
+                log.error("Failed to acquire storage lock", e)
+                throw e
+        }
+        try f finally {
+            lock.release()
+        }
     }
 
 }
