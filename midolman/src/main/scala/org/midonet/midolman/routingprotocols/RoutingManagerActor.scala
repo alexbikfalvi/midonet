@@ -18,7 +18,7 @@ package org.midonet.midolman.routingprotocols
 import java.util.UUID
 
 import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Promise, ExecutionContext, Future}
 
 import akka.actor._
 import com.google.inject.Inject
@@ -89,6 +89,9 @@ object RoutingManagerActor extends Referenceable {
 
     private case class HandlerStop(portId: UUID, value: Boolean)
     private case class HandlerStopError(portId: UUID, e: Throwable)
+
+    case class CreateInterior(portId: UUID, promise: Promise[Option[String]])
+    case class DeleteInterior(portId: UUID, promise: Promise[Unit])
 }
 
 class RoutingManagerActor extends ReactiveActor[AnyRef]
