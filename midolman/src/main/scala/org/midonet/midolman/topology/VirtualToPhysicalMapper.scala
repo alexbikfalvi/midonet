@@ -24,6 +24,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.control.NonFatal
 
+import akka.actor.ActorSystem
+
 import com.google.common.util.concurrent.{ThreadFactoryBuilder, AbstractService}
 import com.google.common.util.concurrent.Service.State
 
@@ -171,6 +173,7 @@ object VirtualToPhysicalMapper extends MidolmanLogging {
 
 class VirtualToPhysicalMapper(backend: MidonetBackend,
                               vt: VirtualTopology,
+                              actorSystem: ActorSystem,
                               reflections: Reflections,
                               hostId: UUID)
     extends AbstractService with MidolmanLogging {
@@ -195,7 +198,7 @@ class VirtualToPhysicalMapper(backend: MidonetBackend,
             .setDaemon(true).build())
     private val containersService =
         new ContainerService(vt, hostId, containerExecutor, containerExecutors,
-                             ioExecutor, reflections)
+                             ioExecutor, reflections, actorSystem)
 
     private val activePorts = new ConcurrentHashMap[UUID, Boolean]
     private val portsActiveSubject = PublishSubject.create[LocalPortActive]

@@ -26,6 +26,8 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
+import akka.actor.ActorSystem
+
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.util.concurrent.AbstractService
 
@@ -68,7 +70,8 @@ class ContainerService(vt: VirtualTopology, hostId: UUID,
                        serviceExecutor: ExecutorService,
                        containerExecutors: ContainerExecutors,
                        ioExecutor: ScheduledExecutorService,
-                       reflections: Reflections)
+                       reflections: Reflections,
+                       actorSystem: ActorSystem)
     extends AbstractService with MidolmanLogging {
 
     override def logSource = "org.midonet.containers"
@@ -121,7 +124,8 @@ class ContainerService(vt: VirtualTopology, hostId: UUID,
     private val containerObservable = Observable.create(containerMapper)
 
     private val provider =
-        new ContainerHandlerProvider(reflections, vt, ioExecutor, log)
+        new ContainerHandlerProvider(reflections, vt, actorSystem, ioExecutor,
+                                     log)
 
     private val logger = new ContainerLogger(vt.config.containers, log)
 

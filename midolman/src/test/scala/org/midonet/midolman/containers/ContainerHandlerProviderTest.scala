@@ -21,6 +21,8 @@ import java.util.concurrent.{ExecutorService, ScheduledExecutorService}
 
 import scala.concurrent.Future
 
+import akka.actor.ActorSystem
+
 import com.google.inject.{ConfigurationException, Inject}
 import com.google.inject.name.Named
 import com.typesafe.scalalogging.Logger
@@ -65,10 +67,11 @@ class ContainerHandlerProviderTest extends FlatSpec with Matchers
     "Container provider" should "load a container with the VT as argument" in {
         Given("A mock virtual topology")
         val vt = Mockito.mock(classOf[VirtualTopology])
+        val as = Mockito.mock(classOf[ActorSystem])
         val executor = Mockito.mock(classOf[ScheduledExecutorService])
 
         And("A provider for the current class path")
-        val provider = new ContainerHandlerProvider(reflections, vt, executor,
+        val provider = new ContainerHandlerProvider(reflections, vt, as, executor,
                                                     log)
 
         Then("The provider should load all classes")
@@ -88,10 +91,11 @@ class ContainerHandlerProviderTest extends FlatSpec with Matchers
     "Container provider" should "fail to create container without identifier" in {
         Given("A mock virtual topology")
         val vt = Mockito.mock(classOf[VirtualTopology])
+        val as = Mockito.mock(classOf[ActorSystem])
         val executor = Mockito.mock(classOf[ScheduledExecutorService])
 
         And("A provider for the current class path")
-        val provider = new ContainerHandlerProvider(reflections, vt, executor,
+        val provider = new ContainerHandlerProvider(reflections, vt, as, executor,
                                                     log)
 
         Then("The provider should load all classes")

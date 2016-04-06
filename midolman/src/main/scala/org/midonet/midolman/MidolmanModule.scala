@@ -148,7 +148,7 @@ class MidolmanModule(injector: Injector,
         val vt = virtualTopology(backChannel)
         bind(classOf[VirtualTopology]).toInstance(vt)
 
-        val vtpm = virtualToPhysicalMapper(host, vt)
+        val vtpm = virtualToPhysicalMapper(host, vt, as)
         bind(classOf[VirtualToPhysicalMapper]).toInstance(vtpm)
 
         val resolver = peerResolver(host, vt)
@@ -399,10 +399,12 @@ class MidolmanModule(injector: Injector,
             )
     }
 
-    protected def virtualToPhysicalMapper(hostId: UUID, vt: VirtualTopology) =
+    protected def virtualToPhysicalMapper(hostId: UUID, vt: VirtualTopology,
+                                          actorSystem: ActorSystem) =
         new VirtualToPhysicalMapper(
             injector.getInstance(classOf[MidonetBackend]),
             vt,
+            actorSystem,
             reflections,
             hostId)
 

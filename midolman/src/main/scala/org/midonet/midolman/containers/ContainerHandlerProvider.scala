@@ -21,6 +21,8 @@ import java.util.concurrent.{ScheduledExecutorService, ExecutorService}
 
 import scala.reflect.classTag
 
+import akka.actor.ActorSystem
+
 import com.google.inject.name.Names
 import com.google.inject.{AbstractModule, Guice}
 import com.typesafe.scalalogging.Logger
@@ -35,6 +37,7 @@ import org.midonet.midolman.topology.VirtualTopology
   */
 class ContainerHandlerProvider(reflections: Reflections,
                                vt: VirtualTopology,
+                               actorSystem: ActorSystem,
                                ioExecutor: ScheduledExecutorService,
                                log: Logger)
     extends ContainerProvider[ContainerHandler](reflections, log)(classTag[ContainerHandler]) {
@@ -42,6 +45,7 @@ class ContainerHandlerProvider(reflections: Reflections,
     protected override val injector = Guice.createInjector(new AbstractModule() {
         override def configure(): Unit = {
             bind(classOf[VirtualTopology]).toInstance(vt)
+            bind(classOf[ActorSystem]).toInstance(actorSystem)
             bind(classOf[ScheduledExecutorService]).annotatedWith(Names.named("io"))
                                                    .toInstance(ioExecutor)
         }
