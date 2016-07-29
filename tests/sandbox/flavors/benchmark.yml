@@ -1,0 +1,178 @@
+zookeeper1:
+  extends:
+    file: $BASE/zookeeper.yml
+    service: zookeeper
+  hostname: zookeeper1
+  image: sandbox/zookeeper:3.4.5
+  labels:
+      interface: mdts.services.zookeeper.ZookeeperHost
+      type: zookeeper
+  volumes:
+  - /zoo/conf/
+  environment:
+  - ZOO_ID=1
+
+zookeeper2:
+  extends:
+    file: $BASE/zookeeper.yml
+    service: zookeeper
+  image: sandbox/zookeeper:3.4.5
+  hostname: zookeeper2
+  labels:
+      interface: mdts.services.zookeeper.ZookeeperHost
+      type: zookeeper
+  environment:
+  - ZOO_ID=2
+  volumes_from:
+  - zookeeper1
+
+zookeeper3:
+  extends:
+    file: $BASE/zookeeper.yml
+    service: zookeeper
+  image: sandbox/zookeeper:3.4.5
+  hostname: zookeeper3
+  labels:
+      interface: mdts.services.zookeeper.ZookeeperHost
+      type: zookeeper
+  environment:
+  - ZOO_ID=3
+  volumes_from:
+  - zookeeper1
+  links:
+  - zookeeper1:zookeeper1
+  - zookeeper2:zookeeper2
+
+cluster1:
+  extends:
+    file: $BASE/midonet-cluster.yml
+    service: cluster
+  image: sandbox/midonet-cluster:master
+  hostname: cluster1
+  labels:
+      interface: mdts.services.midonet_cluster.MidonetClusterHost
+      type: midonet-cluster
+  links:
+  - "zookeeper1:zk1"
+  - "zookeeper2:zk2"
+  - "zookeeper3:zk3"
+
+node01:
+  extends:
+    file: $BASE/midonet-tools.yml
+    service: tools
+  image: sandbox/midonet-tools:master
+  hostname: node01
+  privileged: true
+  links:
+  - "zookeeper1:zk1"
+  - "zookeeper2:zk2"
+  - "zookeeper3:zk3"
+
+node02:
+  extends:
+    file: $BASE/midonet-tools.yml
+    service: tools
+  image: sandbox/midonet-tools:master
+  hostname: node02
+  privileged: true
+  links:
+  - "zookeeper1:zk1"
+  - "zookeeper2:zk2"
+  - "zookeeper3:zk3"
+
+node03:
+  extends:
+    file: $BASE/midonet-tools.yml
+    service: tools
+  image: sandbox/midonet-tools:master
+  hostname: node03
+  privileged: true
+  links:
+  - "zookeeper1:zk1"
+  - "zookeeper2:zk2"
+  - "zookeeper3:zk3"
+
+node04:
+  extends:
+    file: $BASE/midonet-tools.yml
+    service: tools
+  image: sandbox/midonet-tools:master
+  hostname: node04
+  privileged: true
+  links:
+  - "zookeeper1:zk1"
+  - "zookeeper2:zk2"
+  - "zookeeper3:zk3"
+
+node05:
+  extends:
+    file: $BASE/midonet-tools.yml
+    service: tools
+  image: sandbox/midonet-tools:master
+  hostname: node05
+  privileged: true
+  links:
+  - "zookeeper1:zk1"
+  - "zookeeper2:zk2"
+  - "zookeeper3:zk3"
+
+node06:
+  extends:
+    file: $BASE/midonet-tools.yml
+    service: tools
+  image: sandbox/midonet-tools:master
+  hostname: node06
+  privileged: true
+  links:
+  - "zookeeper1:zk1"
+  - "zookeeper2:zk2"
+  - "zookeeper3:zk3"
+
+node07:
+  extends:
+    file: $BASE/midonet-tools.yml
+    service: tools
+  image: sandbox/midonet-tools:master
+  hostname: node07
+  privileged: true
+  links:
+  - "zookeeper1:zk1"
+  - "zookeeper2:zk2"
+  - "zookeeper3:zk3"
+
+node08:
+  extends:
+    file: $BASE/midonet-tools.yml
+    service: tools
+  image: sandbox/midonet-tools:master
+  hostname: node08
+  privileged: true
+  links:
+  - "zookeeper1:zk1"
+  - "zookeeper2:zk2"
+  - "zookeeper3:zk3"
+
+node09:
+  extends:
+    file: $BASE/midonet-tools.yml
+    service: tools
+  image: sandbox/midonet-tools:master
+  hostname: node09
+  privileged: true
+  links:
+  - "zookeeper1:zk1"
+  - "zookeeper2:zk2"
+  - "zookeeper3:zk3"
+
+node10:
+  extends:
+    file: $BASE/midonet-tools.yml
+    service: tools
+  image: sandbox/midonet-tools:master
+  hostname: node10
+  privileged: true
+  links:
+  - "zookeeper1:zk1"
+  - "zookeeper2:zk2"
+  - "zookeeper3:zk3"
