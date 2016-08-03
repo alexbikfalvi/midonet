@@ -89,7 +89,8 @@ object StateBenchmarkAgent extends App {
         inner.start()
         val subscription = inner.observable.subscribe(this)
 
-        override def onNext(update: Update[Any, Any]): Unit = update match {
+        override def onNext(update: Update[Any, Any]): Unit = { }
+        /*update match {
             case Update(k, null, v) =>
                 val key = info.decodeKey(k)
                 val value = info.decodeValue(v)
@@ -100,7 +101,7 @@ object StateBenchmarkAgent extends App {
                 val key = info.decodeKey(k)
                 val oldValue = info.decodeValue(ov)
                 val newValue = info.decodeValue(nv)
-        }
+        }*/
 
         override def onError(e: Throwable): Unit = {
             System.err.println(s"[bm-agent] Table $index observable failed: " +
@@ -182,7 +183,7 @@ object StateBenchmarkAgent extends App {
                 Random.nextLong() & 0xFFFFFFFFFFFFL
             }
             override def randomValue(): Long = {
-                Random.nextLong()
+                System.currentTimeMillis()
             }
             override def encodeKey(key: Long): MAC = {
                 new MAC(key)
@@ -424,9 +425,16 @@ object StateBenchmarkAgent extends App {
             println(s"[Step 2 of 4] Warming up by adding $count entries " +
                     s"to ${tables.length} tables...")
 
+            val meanSleepTime = 60000 / (writeRate.get.get * tables.length)
+
+            def sleepTime(): Long = {
+                (-meanSleepTime * Math.log(1 - Random.nextDouble())).toLong
+            }
+
             for (table <- tables) {
                 for (index <- 0 until count) {
                     table.add()
+                    Thread.sleep(sleepTime())
                 }
             }
 

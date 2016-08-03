@@ -16,6 +16,7 @@
 
 package org.midonet.cluster.services.state
 
+import java.nio.ByteOrder
 import java.util
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicLong, AtomicReference}
@@ -33,17 +34,35 @@ import org.apache.zookeeper.data.Stat
 import org.apache.zookeeper.{KeeperException, WatchedEvent, Watcher}
 import org.slf4j.LoggerFactory
 
+import org.midonet.benchmark.InfluxDbBenchmarkWriter
 import org.midonet.cluster.data.storage.StateTableStorage
 import org.midonet.cluster.rpc.State.KeyValue
 import org.midonet.cluster.rpc.State.ProxyResponse.Notify
 import org.midonet.cluster.rpc.State.ProxyResponse.Notify.Update
 import org.midonet.cluster.services.state.StateTableCache._
-import org.midonet.cluster.{StateProxyConfig, StateProxyCacheLog}
+import org.midonet.cluster.{StateProxyCacheLog, StateProxyConfig}
+import org.midonet.util.concurrent.CallingThreadExecutionContext
 import org.midonet.util.functors.makeRunnable
 
 object StateTableCache {
 
     final val Log = Logger(LoggerFactory.getLogger(StateProxyCacheLog))
+    final val Metrics = new InfluxDbBenchmarkWriter(
+        "http://nodedb0.zookeeper.midonet.isi.deterlab.net:8086",
+        "admin", "admin", "data")
+
+    def getValueTimestamp(keyValue: KeyValue): Long = {
+        if (keyValue.hasDataVariable) {
+            val buffer = keyValue.getDataVariable.asReadOnlyByteBuffer()
+            buffer.order(ByteOrder.BIG_ENDIAN)
+            buffer.getLong
+            buffer.getLong
+        } else -1
+    }
+
+    private case class TimestampedNotify(inner: Notify) {
+        val timestamp = System.currentTimeMillis()
+    }
 
     /**
       * An internal implementation for a [[StateTableSubscription]], which
@@ -62,7 +81,7 @@ object StateTableCache {
         @volatile private var version = -1L
         // The queue is volatile such that it can be nulled during unsubscribe.
         @volatile private var queue =
-            new util.ArrayDeque[Notify](cache.initialSubscriberQueueSize)
+            new util.ArrayDeque[TimestampedNotify](cache.initialSubscriberQueueSize)
         private var sending = false
 
         /**
@@ -100,10 +119,10 @@ object StateTableCache {
                 // queue, which becomes invalidated when the subscription
                 // becomes unsubscribed.
                 queue = null
-                send(Notify.newBuilder()
-                           .setCompleted(buildError(e))
-                           .setSubscriptionId(id)
-                           .build())
+                send(TimestampedNotify(Notify.newBuilder()
+                                           .setCompleted(buildError(e))
+                                           .setSubscriptionId(id)
+                                           .build()))
             }
         }
 
@@ -150,10 +169,10 @@ object StateTableCache {
         private def enqueue(updates: Array[Update]): Unit = {
             var index = 0
             while (index < updates.length) {
-                enqueue(Notify.newBuilder()
-                            .setSubscriptionId(id)
-                            .setUpdate(updates(index))
-                            .build())
+                enqueue(new TimestampedNotify(Notify.newBuilder()
+                                                  .setSubscriptionId(id)
+                                                  .setUpdate(updates(index))
+                                                  .build()))
                 index += 1
             }
         }
@@ -164,7 +183,7 @@ object StateTableCache {
           * the cache dispatcher thread and therefore the queue and sending
           * flag need not be synchronized.
           */
-        private def enqueue(notify: Notify): Unit = {
+        private def enqueue(notify: TimestampedNotify): Unit = {
             val currentQueue = queue
             if (currentQueue ne null) {
                 if (sending) {
@@ -179,7 +198,7 @@ object StateTableCache {
         /**
           * Sends a notification message to the observer immediately.
           */
-        private def send(notify: Notify): Unit = {
+        private def send(notify: TimestampedNotify): Unit = {
             if (notify eq null) {
                 // We only get here for messages polled from the queue, which
                 // is done on the dispatcher thread.
@@ -187,24 +206,65 @@ object StateTableCache {
                 return
             }
             try {
-                observer.next(notify).onComplete { result =>
-                    // Accessing the observer queue on the cache dispatcher
-                    // thread.
-                    val currentQueue = queue
-                    if (currentQueue ne null) {
-                        send(currentQueue.poll())
+                if (notify.inner.hasUpdate) {
+                    var index = 0
+                    while (index < notify.inner.getUpdate.getEntriesCount) {
+                        val entry = notify.inner.getUpdate.getEntries(index)
+                        val timestamp = System.currentTimeMillis()
+                        val time = getValueTimestamp(entry.getValue)
+                        val latency = timestamp - time
+                        if (time > 0) {
+                            Metrics.proxyNotifyLatency(timestamp, latency)
+                        }
+                        index += 1
                     }
-                }(cache.dispatcher)
+                }
+                Metrics.proxyNotify(
+                    System.currentTimeMillis() - notify.timestamp,
+                    if (notify.inner.hasUpdate) notify.inner.getUpdate.getEntriesCount else -1)
+                val timestamp = System.currentTimeMillis()
+                observer.next(notify.inner).onComplete { result =>
+                    Metrics.proxyQueuedTasks(cache.queuedTasks.incrementAndGet(),
+                                             cache.sendQueuedTasks.incrementAndGet(),
+                                             cache.callbackQueuedTasks.get,
+                                             cache.processQueuedTasks.get,
+                                             cache.refreshQueuedTasks.get)
+                    cache.dispatcher.execute(makeRunnable {
+                        // Accessing the observer queue on the cache dispatcher
+                        // thread.
+                        val currentQueue = queue
+                        if (currentQueue ne null) {
+                            send(currentQueue.poll())
+                        }
+                        Metrics.proxySendQueueLatency(System.currentTimeMillis() - timestamp)
+                        Metrics.proxyQueuedTasks(cache.queuedTasks.decrementAndGet(),
+                                                 cache.sendQueuedTasks.decrementAndGet(),
+                                                 cache.callbackQueuedTasks.get,
+                                                 cache.processQueuedTasks.get,
+                                                 cache.refreshQueuedTasks.get)
+                    })
+                    Metrics.proxyNettyLatency(System.currentTimeMillis() - timestamp)
+                }(CallingThreadExecutionContext)
             } catch {
                 case NonFatal(e) =>
                     Log.warn(s"(${cache.logId}) Unhandled exception during " +
                              s"notification for subscription $id", e)
                     // Sending the next message on the cache dispatcher thread.
+                    Metrics.proxyQueuedTasks(cache.queuedTasks.incrementAndGet(),
+                                             cache.sendQueuedTasks.incrementAndGet(),
+                                             cache.callbackQueuedTasks.get,
+                                             cache.processQueuedTasks.get,
+                                             cache.refreshQueuedTasks.get)
                     cache.dispatcher.execute(makeRunnable {
                         val currentQueue = queue
                         if (currentQueue ne null) {
                             send(currentQueue.poll())
                         }
+                        Metrics.proxyQueuedTasks(cache.queuedTasks.decrementAndGet(),
+                                                 cache.sendQueuedTasks.decrementAndGet(),
+                                                 cache.callbackQueuedTasks.get,
+                                                 cache.processQueuedTasks.get,
+                                                 cache.refreshQueuedTasks.get)
                     })
             }
         }
@@ -374,6 +434,8 @@ class StateTableCache(val config: StateProxyConfig,
     private val pending =
         new AtomicReference[Map[Subscription, Runnable]](EmptyPendingMap)
 
+    private val eventQueue = new AtomicReference[CuratorEvent](null)
+
     private val diffAddCache = new util.ArrayList[TableEntry](8)
     private val diffRemoveCache = new util.ArrayList[TableEntry](8)
 
@@ -383,6 +445,14 @@ class StateTableCache(val config: StateProxyConfig,
 
     private val keyDecoder = StateEntryDecoder.get(tableKey)
     private val valueDecoder = StateEntryDecoder.get(tableValue)
+
+    private val refreshRequestCount = new AtomicLong()
+    private val refreshCompleteCount = new AtomicLong()
+    val queuedTasks = new AtomicLong()
+    val sendQueuedTasks = new AtomicLong()
+    val callbackQueuedTasks = new AtomicLong()
+    val processQueuedTasks = new AtomicLong()
+    val refreshQueuedTasks = new AtomicLong()
 
     @volatile
     private var callback = new BackgroundCallback {
@@ -563,9 +633,10 @@ class StateTableCache(val config: StateProxyConfig,
         }
         try {
             val context = Long.box(System.currentTimeMillis())
+            Metrics.proxyRefreshRequest(refreshRequestCount.incrementAndGet())
             curator.getChildren
                    .usingWatcher(watcher)
-                   .inBackground(callback, context, executor)
+                   .inBackground(callback, context)
                    .forPath(path)
         } catch {
             case NonFatal(e) =>
@@ -575,17 +646,20 @@ class StateTableCache(val config: StateProxyConfig,
     }
 
     /**
-      * Processes the changes for the state table.
+      * Processes the changes for the state table on the current executor.
       */
     private def processCallback(event: CuratorEvent): Unit = {
         if (state.get.closed) {
             return
         }
 
+        Metrics.proxyRefreshComplete(refreshCompleteCount.incrementAndGet(),
+                                     latency(event.getContext))
+
         if (event.getResultCode == Code.OK.intValue()) {
             Log trace s"($logId) Read ${event.getChildren.size()} entries in " +
                       s"${latency(event.getContext)} ms"
-            processEntries(event.getChildren, event.getStat)
+            enqueueEntries(event)
         } else if (event.getResultCode == Code.NONODE.intValue()) {
             Log debug s"($logId) State table does not exist or deleted"
             close(KeeperException.create(Code.NONODE, event.getPath))
@@ -639,27 +713,52 @@ class StateTableCache(val config: StateProxyConfig,
             }
     }
 
+    private def enqueueEntries(event: CuratorEvent): Unit = {
+        val current = eventQueue.getAndSet(event)
+        if (current eq null) {
+            val startTime = System.currentTimeMillis()
+            Metrics.proxyQueuedTasks(queuedTasks.incrementAndGet(),
+                                     sendQueuedTasks.get(),
+                                     callbackQueuedTasks.get,
+                                     processQueuedTasks.incrementAndGet(),
+                                     refreshQueuedTasks.get)
+
+            executor.submit(makeRunnable {
+                val queueTime = System.currentTimeMillis()
+
+                val last = eventQueue.getAndSet(null)
+                processEntries(last.getChildren, last.getStat)
+
+                Metrics.proxyProcessLatency(startTime, queueTime,
+                                            System.currentTimeMillis())
+                Metrics.proxyQueuedTasks(queuedTasks.decrementAndGet(),
+                                         sendQueuedTasks.get(),
+                                         callbackQueuedTasks.get,
+                                         processQueuedTasks.decrementAndGet(),
+                                         refreshQueuedTasks.get)
+            })
+        }
+    }
+
     /**
       * Processes the entries received by an update operation. The method
       * updates the cache and notifies all subscriber of the map changes.
       * Processing is done on the dispatcher thread.
       */
     private def processEntries(entries: util.List[String], stat: Stat): Unit = {
-        executor.submit(makeRunnable {
-            try {
-                processEntriesUnsafe(entries, stat)
-            } catch {
-                case NonFatal(e) =>
-                    // We should never get here, when we do there is a bug, in
-                    // which case the cache may be corrupted: terminate all
-                    // subscriptions.
-                    val message =
-                        s"($logId) Unexpected exception when processing " +
-                        s"cache entries for version ${stat.getPzxid}"
-                    Log.error(message, e)
-                    close(new IllegalStateException(message))
-            }
-        })
+        try {
+            processEntriesUnsafe(entries, stat)
+        } catch {
+            case NonFatal(e) =>
+                // We should never get here, when we do there is a bug, in
+                // which case the cache may be corrupted: terminate all
+                // subscriptions.
+                val message =
+                    s"($logId) Unexpected exception when processing " +
+                    s"cache entries for version ${stat.getPzxid}"
+                Log.error(message, e)
+                close(new IllegalStateException(message))
+        }
     }
 
     /**
@@ -678,6 +777,7 @@ class StateTableCache(val config: StateProxyConfig,
         }
 
         Log trace s"($logId) Entries updated version:${stat.getPzxid} $entries"
+        Metrics.proxyTableSize(entries.size())
 
         // Set the current table version.
         val lastVersion = version
@@ -764,6 +864,14 @@ class StateTableCache(val config: StateProxyConfig,
                                        .setKey(entry.key)
                                        .setValue(entry.value)
                                        .setVersion(entry.version))
+
+                val timestamp = getValueTimestamp(entry.value)
+                val time = System.currentTimeMillis()
+                val latency = time - timestamp
+                if (timestamp > 0) {
+                    Metrics.proxyReadLatency(time, latency)
+                }
+
                 inIndex += 1
                 if (builder.getEntriesCount == notifyBatchSize) {
                     updates(outIndex) = builder.build()
@@ -887,6 +995,12 @@ class StateTableCache(val config: StateProxyConfig,
                         s"updates for version $lastVersion"
                     Log.error(message, e)
                     close(new IllegalStateException(message))
+            } finally {
+                Metrics.proxyQueuedTasks(queuedTasks.decrementAndGet(),
+                                         sendQueuedTasks.get(),
+                                         callbackQueuedTasks.get,
+                                         processQueuedTasks.get,
+                                         refreshQueuedTasks.decrementAndGet())
             }
         }
 
@@ -895,6 +1009,11 @@ class StateTableCache(val config: StateProxyConfig,
         do {
             previous = pending.get()
             if (previous eq null) {
+                Metrics.proxyQueuedTasks(queuedTasks.incrementAndGet(),
+                                         sendQueuedTasks.get(),
+                                         callbackQueuedTasks.get,
+                                         processQueuedTasks.get,
+                                         refreshQueuedTasks.incrementAndGet())
                 executor.submit(runnable)
                 return
             }

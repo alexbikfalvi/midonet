@@ -32,7 +32,7 @@ object BenchmarkWriter {
 
 trait BenchmarkWriter {
 
-    def append(metric: StateTableMetric): Unit
+    def latency(metric: StateTableMetric): Unit
 
     def close(): Unit
 

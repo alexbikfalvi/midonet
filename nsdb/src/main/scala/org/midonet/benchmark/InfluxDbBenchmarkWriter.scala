@@ -35,13 +35,143 @@ class InfluxDbBenchmarkWriter(url: String, user: String, password: String,
 
     val executor = Executors.newSingleThreadExecutor()
 
-    override def append(metric: StateTableMetric): Unit = {
+    override def latency(metric: StateTableMetric): Unit = {
         executor.submit(makeRunnable {
             val point = Point.measurement("latency")
                 .time(metric.time, TimeUnit.MILLISECONDS)
                 .addField("callback", metric.callbackLatency)
                 .addField("storage", metric.storageLatency)
                 .addField("proxy", metric.proxyLatency)
+                .build()
+            try db.write(database, "default", point)
+            catch { case NonFatal(_) => }
+        })
+    }
+
+    def proxyTableSize(value: Long): Unit = {
+        executor.submit(makeRunnable {
+            val point = Point.measurement("proxy")
+                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                .addField("table-size", value)
+                .build()
+            try db.write(database, "default", point)
+            catch { case NonFatal(_) => }
+        })
+    }
+
+    def proxyRoundTripLatency(time: Long, value: Long): Unit = {
+        executor.submit(makeRunnable {
+            val point = Point.measurement("proxy")
+                .time(time, TimeUnit.MILLISECONDS)
+                .addField("round-trip-latency", value)
+                .build()
+            try db.write(database, "default", point)
+            catch { case NonFatal(_) => }
+        })
+    }
+
+    def proxyReadLatency(time: Long, value: Long): Unit = {
+        executor.submit(makeRunnable {
+            val point = Point.measurement("proxy")
+                .time(time, TimeUnit.MILLISECONDS)
+                .addField("read-latency", value)
+                .build()
+            try db.write(database, "default", point)
+            catch { case NonFatal(_) => }
+        })
+    }
+
+    def proxyNotifyLatency(time: Long, value: Long): Unit = {
+        executor.submit(makeRunnable {
+            val point = Point.measurement("proxy")
+                .time(time, TimeUnit.MILLISECONDS)
+                .addField("notify-latency", value)
+                .build()
+            try db.write(database, "default", point)
+            catch { case NonFatal(_) => }
+        })
+    }
+
+    def proxyProcessLatency(start: Long, queue: Long, end: Long): Unit = {
+        executor.submit(makeRunnable {
+            val point = Point.measurement("proxy")
+                .time(end, TimeUnit.MILLISECONDS)
+                .addField("process-queue-latency", queue - start)
+                .addField("process-execute-latency", end - queue)
+                .addField("process-total-latency", end - start)
+                .build()
+            try db.write(database, "default", point)
+            catch { case NonFatal(_) => }
+        })
+    }
+
+    def proxyNotify(queueDelay: Long, updateCount: Int): Unit = {
+        executor.submit(makeRunnable {
+            val point = Point.measurement("proxy")
+                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                .addField("notify-queue-delay", queueDelay)
+                .addField("notify-update-count", updateCount)
+                .build()
+            try db.write(database, "default", point)
+            catch { case NonFatal(_) => }
+        })
+    }
+
+    def proxyRefreshRequest(value: Long): Unit = {
+        executor.submit(makeRunnable {
+            val point = Point.measurement("proxy")
+                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                .addField("refresh-request", value)
+                .build()
+            try db.write(database, "default", point)
+            catch { case NonFatal(_) => }
+        })
+    }
+
+    def proxyRefreshComplete(count: Long, latency: Long): Unit = {
+        executor.submit(makeRunnable {
+            val point = Point.measurement("proxy")
+                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                .addField("refresh-complete", count)
+                .addField("refresh-latency", latency)
+                .build()
+            try db.write(database, "default", point)
+            catch { case NonFatal(_) => }
+        })
+    }
+
+    def proxyNettyLatency(value: Long): Unit = {
+        executor.submit(makeRunnable {
+            val point = Point.measurement("proxy")
+                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                .addField("netty-latency", value)
+                .build()
+            try db.write(database, "default", point)
+            catch { case NonFatal(_) => }
+        })
+    }
+
+    def proxySendQueueLatency(value: Long): Unit = {
+        executor.submit(makeRunnable {
+            val point = Point.measurement("proxy")
+                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                .addField("send-queue-latency", value)
+                .build()
+            try db.write(database, "default", point)
+            catch { case NonFatal(_) => }
+        })
+    }
+
+    def proxyQueuedTasks(total: Long, send: Long, callback: Long, process: Long,
+                         refresh: Long): Unit = {
+        executor.submit(makeRunnable {
+            val point = Point.measurement("proxy")
+                .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                .addField("queue-size", total)
+                .addField("queue-send-size", send)
+                .addField("queue-callback-size", callback)
+                .addField("queue-process-size", process)
+                .addField("queue-refresh-size", refresh)
                 .build()
             try db.write(database, "default", point)
             catch { case NonFatal(_) => }

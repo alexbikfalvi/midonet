@@ -114,7 +114,7 @@ trait StateTableMetrics[K, V] {
 
     private def updateStat(entry: Entry[K, V], stat: Stat, operation: Int): Unit = {
         if (StateTableMetrics.writer ne null) {
-            StateTableMetrics.writer.append(StateTableMetric(
+            StateTableMetrics.writer.latency(StateTableMetric(
                 System.currentTimeMillis(), operation,
                 StateTableMetrics.encodeEntry(entry.key),
                 StateTableMetrics.encodeEntry(entry.value),

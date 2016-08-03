@@ -34,7 +34,7 @@ class FileBenchmarkWriter(fileName: String) extends BenchmarkWriter {
         StandardOpenOption.TRUNCATE_EXISTING)
     val executor = Executors.newSingleThreadExecutor()
 
-    override def append(metric: StateTableMetric): Unit = {
+    override def latency(metric: StateTableMetric): Unit = {
         executor.submit(makeRunnable {
             val buffer = ByteBuffer.allocate(52)
             buffer.putLong(metric.time)
