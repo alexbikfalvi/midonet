@@ -35,12 +35,14 @@ object Metering extends MeteringMXBean {
     @volatile private var flowMeters: Array[FlowMeters] = _
 
     override def listMeters = {
+        Log info "Metering listMeters()"
         val keys = new util.HashSet[String]
         registries foreach { keys addAll _.meters.keySet() }
         keys.toArray(new Array[String](keys.size()))
     }
 
     override def getMeter(name: String) = {
+        Log info s"Metering getMeter($name)"
         registries.foldLeft(new FlowStats()) { (acc, r) =>
             val meter = r.meters.get(name)
             if (meter ne null)
@@ -50,6 +52,7 @@ object Metering extends MeteringMXBean {
     }
 
     override def getMeters: Array[FlowMeters] = {
+        Log info "Metering getMeters()"
         var meters = flowMeters
         val r = registries
         if ((meters eq null) || meters.length < r.length) {
@@ -65,6 +68,7 @@ object Metering extends MeteringMXBean {
     }
 
     override def getConsolidatedMeters: FlowMeters = {
+        Log info "Metering getConsolidatedMeters()"
         val iterator = registries.iterator
         val meters = new util.HashMap[String, FlowStats]()
         while (iterator.hasNext) {
