@@ -217,7 +217,7 @@ tar.doLast {
     new File("{buildDir}/install/${project.name}").deleteDir()
 }
 
-mainClassName = "org.midonet.agent.MidonetAgent"
+mainClassName = "org.midonet.agent.Agent"
 
 task testReport(type: TestReport, dependsOn: test) {
     destinationDir = file("$buildDir/reports/tests")
