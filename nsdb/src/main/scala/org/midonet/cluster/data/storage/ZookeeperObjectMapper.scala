@@ -126,6 +126,7 @@ class ZookeeperObjectMapper(config: MidonetBackendConfig,
     private[storage] val topologyLockPath = s"$zoomPath/locks/zoom-topology"
     private[storage] val transactionLocksPath = zoomPath + s"/zoomlocks/lock"
     private[storage] val modelPath = zoomPath + s"/models"
+    private[storage] val objectsPath = zoomPath + s"/objects"
     @volatile private var lockFree = false
 
     private val executor = newSingleThreadExecutor(
@@ -215,17 +216,13 @@ class ZookeeperObjectMapper(config: MidonetBackendConfig,
                 "Could not acquire current zxid.", ex)
         }
 
-        private def getPath(clazz: Class[_], id: ObjId) = {
-            ZookeeperObjectMapper.this.objectPath(clazz, id)
-        }
-
         override def isRegistered(clazz: Class[_]): Boolean = {
             ZookeeperObjectMapper.this.isRegistered(clazz)
         }
 
         override def getSnapshot(clazz: Class[_], id: ObjId)
         : Observable[ObjSnapshot] = {
-            val path = getPath(clazz, id)
+            val path = objectPath(clazz, id)
 
             asObservable {
                 curator.getData.inBackground(_).forPath(path)
@@ -280,16 +277,16 @@ class ZookeeperObjectMapper(config: MidonetBackendConfig,
 
             for ((Key(clazz, id), txOp) <- ops) txn = txOp match {
                 case TxCreate(obj) =>
-                    val path = getPath(clazz, id)
+                    val path = objectPath(clazz, id)
                     Log.debug(s"Create: $path")
                     txn.create.forPath(path, serialize(obj)).and
                 case TxUpdate(obj, ver) =>
-                    val path = getPath(clazz, id)
+                    val path = objectPath(clazz, id)
                     Log.debug(s"Update ($ver): $path")
                     txn.setData().withVersion(ver)
                         .forPath(path, serialize(obj)).and
                 case TxDelete(ver) =>
-                    val path = getPath(clazz, id)
+                    val path = objectPath(clazz, id)
                     Log.debug(s"Delete ($ver): $path")
                     txn.delete.withVersion(ver).forPath(path).and
                 case TxCreateNode(value) =>
@@ -454,8 +451,12 @@ class ZookeeperObjectMapper(config: MidonetBackendConfig,
      * Ideally this method should be called at startup for all classes
      * intended to be stored in this instance of ZookeeperObjectManager.
      */
+    @throws[IllegalStateException]
     override def registerClass(clazz: Class[_]): Unit = {
-        assert(!isBuilt)
+        if (isBuilt) {
+            throw new IllegalStateException("Cannot register a new class " +
+                                            "because storage is already build")
+        }
         val name = clazz.getSimpleName
         simpleNameToClass.get(name) match {
             case Some(_) =>
@@ -506,8 +507,9 @@ class ZookeeperObjectMapper(config: MidonetBackendConfig,
         // as they usually will except on the first startup, we can verify this
         // in a single round trip to Zookeeper.
         var txn = curator.inTransaction().asInstanceOf[CuratorTransactionFinal]
-        for (clazz <- classes) {
+        for ((clazz, info) <- classes) {
             txn = txn.check().forPath(classPath(clazz)).and()
+            txn = txn.check().forPath(classPath2(clazz)).and()
             txn = txn.check().forPath(stateClassPath(namespace, clazz)).and()
             txn = txn.check().forPath(tablesClassPath(clazz)).and()
         }
@@ -525,6 +527,8 @@ class ZookeeperObjectMapper(config: MidonetBackendConfig,
             for (clazz <- classes) {
                 ZKPaths.mkdirs(curator.getZookeeperClient.getZooKeeper,
                                classPath(clazz))
+                ZKPaths.mkdirs(curator.getZookeeperClient.getZooKeeper,
+                               classPath2(clazz))
                 ZKPaths.mkdirs(curator.getZookeeperClient.getZooKeeper,
                                stateClassPath(namespace, clazz))
                 ZKPaths.mkdirs(curator.getZookeeperClient.getZooKeeper,
@@ -868,6 +872,27 @@ class ZookeeperObjectMapper(config: MidonetBackendConfig,
         classPath(clazz) + "/" + getIdString(id)
     }
 
+    @inline
+    private def classPath2(clazz: Class[_]): String = {
+        objectsPath + "/" + clazz.getSimpleName
+    }
+
+    @inline
+    private def objectPath2(clazz: Class[_], id: ObjId): String = {
+        classPath2(clazz) + "/" + getIdString(id)
+    }
+
+    @inline
+    private def objectHistoryPath(clazz: Class[_], id: ObjId): String = {
+        objectPath2(clazz, id) + "/history"
+    }
+
+    @inline
+    private def objectVersionPath(clazz: Class[_], id: ObjId, version: Int)
+    : String = {
+        objectHistoryPath(clazz, id) + "/" + version.toString
+    }
+
     protected[cluster] def isLockFree = lockFree
 
     private def lockFreeAndWatch(async: Boolean): Unit = {
@@ -927,8 +952,7 @@ object ZookeeperObjectMapper {
     protected val Log = LoggerFactory.getLogger("org.midonet.nsdb")
     private val OnCloseDefault = { }
 
-    private[storage] def makeInfo(clazz: Class[_])
-    : ClassInfo = {
+    private[storage] def makeInfo(clazz: Class[_]): ClassInfo = {
         try {
             if (classOf[Message].isAssignableFrom(clazz)) {
                 new MessageClassInfo(clazz)
