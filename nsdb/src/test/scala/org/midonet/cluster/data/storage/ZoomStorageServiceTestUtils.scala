@@ -25,6 +25,7 @@ import org.scalatest.Suite
 
 import rx.Observable
 
+import org.midonet.cluster.data.ZoomVersion.ZoomOwner.ZoomOwner
 import org.midonet.cluster.data.storage.FieldBinding.DeleteAction
 import org.midonet.cluster.data.storage.metrics.StorageMetrics
 import org.midonet.cluster.data.{Obj, ObjId}
@@ -133,12 +134,12 @@ trait ZoomStorageTester extends StorageTester
         zoom.multi(ops)
     }
 
-    override def transaction(): Transaction = {
-        zoom.transaction()
+    override def transaction(owner: ZoomOwner): Transaction = {
+        zoom.transaction(owner)
     }
 
-    override def tryTransaction[R](f: (Transaction) => R): R = {
-        zoom.tryTransaction(f)
+    override def tryTransaction[R](owner: ZoomOwner)(f: (Transaction) => R): R = {
+        zoom.tryTransaction(owner)(f)
     }
 
     override def observable[T](clazz: Class[T], id: ObjId): Observable[T] = {

@@ -31,7 +31,9 @@ import org.apache.curator.framework.recipes.cache.ChildData
 import rx.Notification
 import rx.functions.Func1
 
-import org.midonet.cluster.data.Obj
+import org.midonet.cluster.data.ZoomVersion.ZoomChange.ZoomChange
+import org.midonet.cluster.data.ZoomVersion.ZoomOwner.ZoomOwner
+import org.midonet.cluster.data.{Obj, ZoomVersion}
 import org.midonet.util.functors.makeFunc1
 
 private[storage] object ZoomSerializer {
@@ -52,6 +54,19 @@ private[storage] object ZoomSerializer {
             case message: Message => serializeMessage(message)
             case _ => serializeJava(obj)
         }
+    }
+
+    @throws[InternalObjectMapperException]
+    def serializeSnapshot(obj: Obj, version: Int, owner: ZoomOwner, change: Int)
+    : Array[Byte] = {
+        val data = obj match {
+            case message: Message => message.toByteArray
+            case _ => serializeJava(obj)
+        }
+        val bytes = new Array[Byte](data.length + ZoomVersion.Size)
+        ZoomVersion.writeTo(bytes, version, owner, change)
+        System.arraycopy(data, 0, bytes, ZoomVersion.Size, data.length)
+        bytes
     }
 
     /**

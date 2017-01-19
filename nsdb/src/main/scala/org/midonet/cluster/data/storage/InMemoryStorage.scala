@@ -40,6 +40,7 @@ import rx._
 import rx.subjects.PublishSubject
 
 import org.midonet.cluster.backend.{Directory, MockDirectory}
+import org.midonet.cluster.data.ZoomVersion.ZoomOwner.ZoomOwner
 import org.midonet.cluster.data.storage.InMemoryStorage._
 import org.midonet.cluster.data.storage.KeyType.KeyType
 import org.midonet.cluster.data.storage.StateStorage._
@@ -524,11 +525,11 @@ class InMemoryStorage extends Storage with StateStorage with StateTableStorage
             // Validate the transaction ops.
             for ((Key(clazz, id), op) <- ops) {
                 op match {
-                    case TxCreate(obj) =>
+                    case TxCreate(obj, _) =>
                         classes.get(clazz).validateCreate(id)
-                    case TxUpdate(obj, ver) =>
+                    case TxUpdate(obj, ver, _) =>
                         classes.get(clazz).validateUpdate(id, ver)
-                    case TxDelete(ver) =>
+                    case TxDelete(ver, _) =>
                         classes.get(clazz).validateDelete(id, ver)
                     case _ =>
                 }
@@ -537,7 +538,7 @@ class InMemoryStorage extends Storage with StateStorage with StateTableStorage
             // Apply the transaction ops.
             for ((Key(clazz, id), op) <- ops) {
                 op match {
-                    case TxCreate(obj) =>
+                    case TxCreate(obj, _) =>
                         classes.get(clazz).create(id, obj)
                         if (tableInfo.contains(clazz)) {
                             for ((name, provider) <- tableInfo(clazz).tables) {
@@ -546,9 +547,9 @@ class InMemoryStorage extends Storage with StateStorage with StateTableStorage
                                     null)
                             }
                         }
-                    case TxUpdate(obj, ver) =>
+                    case TxUpdate(obj, ver, _) =>
                         classes.get(clazz).update(id, obj, ver)
-                    case TxDelete(ver) =>
+                    case TxDelete(ver, _) =>
                         classes.get(clazz).delete(id, ver)
                     case TxCreateNode(value) =>
                         tablesDirectory.ensureHas(id, asBytes(value))
@@ -635,13 +636,13 @@ class InMemoryStorage extends Storage with StateStorage with StateTableStorage
         manager.commit()
     }
 
-    override def transaction(): Transaction = {
+    override def transaction(owner: ZoomOwner): Transaction = {
         assertBuilt()
         new InMemoryTransactionManager
     }
 
-    override def tryTransaction[R](f: (Transaction) => R): R = {
-        val tx = transaction()
+    override def tryTransaction[R](owner: ZoomOwner)(f: (Transaction) => R): R = {
+        val tx = transaction(owner)
         val result = f(tx)
         tx.commit()
         result
