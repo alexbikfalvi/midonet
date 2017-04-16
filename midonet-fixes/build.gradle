@@ -1,0 +1,108 @@
+/*
+ * Copyright 2017 Midokura SARL
+ */
+
+apply plugin: 'scala'
+apply plugin: 'application'
+apply from: "${rootProject.projectDir}/fpm.gradle"
+apply from: "${rootProject.projectDir}/git.gradle"
+
+mainClassName = "org.midonet.fixes.BindingFix"
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Midonet Fix Tools',
+                   'Implementation-Version': version
+    }
+}
+
+sourceSets {
+    main {
+        scala { srcDirs = ['src/main/scala', 'src/main/java'] }
+        java { srcDirs = [] }
+    }
+    test {
+        scala { srcDirs = ['src/test/scala', 'src/test/java'] }
+        java { srcDirs = [] }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile project(':nsdb')
+}
+
+task preparePkg(type: Copy, dependsOn: installShadowApp) {
+    from("${buildDir}/installShadow/${project.name}/lib/${project.name}-${midonetVersion}-all.jar") {
+        into "usr/share/midonet-fixes"
+    }
+    from("${buildDir}/man/") {
+        include "*.*"
+        into "usr/share/man/man1"
+    }
+    from("src/bin/") {
+        into "usr/bin"
+    }
+    from("src/share/prepare-java") {
+        into "usr/share/midonet-fixes"
+    }
+    into "${pkgDestDir}"
+    doLast {
+        new File("${pkgDestDir}/usr/share/midonet-fixes/${project.name}-${midonetVersion}-all.jar").
+                renameTo("${pkgDestDir}/usr/share/midonet-fixes/${project.name}.jar")
+    }
+}
+
+packaging {
+    version = project.debVersion
+    maintainer = project.maintainer
+    vendor = project.vendor
+    url = project.url
+    description = 'Command line fix tools for MidoNet, a virtual network controller'
+    fpmOpts = ['-a', 'all',
+               '--category', 'network',
+               '--url', 'http://midokura.com',
+               '--epoch', '2']
+}
+
+preparePkg.dependsOn cleanPkg
+debian.dependsOn preparePkg
+rpm.dependsOn preparePkg
+tar.dependsOn preparePkg
+
+debian.doFirst {
+    project.packaging.version = project.debVersion
+    project.packaging.fpmOpts = project.packaging.fpmOpts.clone()
+    project.packaging.fpmOpts.addAll([
+            '-d', 'openjdk-8-jdk-headless | java8-runtime-headless | java8-runtime'])
+}
+
+rpm.doFirst {
+    project.packaging.version = project.rpmVersion
+    project.packaging.iteration = project.rpmRelease
+    project.packaging.fpmOpts = project.packaging.fpmOpts.clone()
+    project.packaging.fpmOpts.addAll([
+            '--depends', 'java-1.8.0-openjdk-headless'])
+}
+
+tar.doFirst {
+    project.packaging.version = project.debVersion
+    project.packaging.fpmOpts = project.packaging.fpmOpts.clone()
+}
+
+debian.doLast {
+    new File("${buildDir}/install/${project.name}").deleteDir()
+}
+
+rpm.doLast {
+    new File("${buildDir}/install/${project.name}").deleteDir()
+}
+
+tar.doLast {
+    new File("${buildDir}/install/${project.name}").deleteDir()
+}
+
+preparePkg.dependsOn manpages
