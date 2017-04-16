@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Copyright 2017 Midokura SARL
+
+# If MIDO_HOME has not been set, set it.
+if [ -z "$MIDO_HOME" ]; then
+   MIDO_HOME=/usr/share/midonet-fixes
+fi
+
+if [ ! -d "$MIDO_HOME" ]; then
+   echo "ERROR: $MIDO_HOME does not exist"
+   exit 1
+fi
+
+if [ -f $MIDO_HOME/prepare-java ]; then
+    . $MIDO_HOME/prepare-java
+else
+    echo "$MIDO_HOME/prepare-java: file not found"
+    exit 1
+fi
+
+MAIN_CLASS='org.midonet.fixes.BindingFix'
+
+# OpenJDK uses the system jnidispatcher as default, since /usr/lib/jni is in
+# the java library path. We specify our jna.jar in the classpath, this leads
+# to incompatibility.  We should use either (1) the system jnidispatcher and
+# the system jna.jar or (2) the packaged jnidispatcher and the packaged
+# jna.jar.  Here we remove the /usr/lib/jni from the library path to use the
+# packaged jnidispatcher
+JAVA_LIBRARY_PATH=-Djava.library.path=/lib:/usr/lib
+
+# Allow overriding the default jar location
+if [ -z "$MIDO_JAR" ]; then
+   CLASSPATH=$MIDO_HOME/midonet-fixes.jar
+else
+   CLASSPATH=$MIDO_JAR
+fi
+
+if [ ! -e "$CLASSPATH" ]; then
+   echo "ERROR: $CLASSPATH is not set"
+   exit 1
+fi
+
+exec $JAVA -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none \
+    $JAVA_LIBRARY_PATH -cp $CLASSPATH $MAIN_CLASS $*
