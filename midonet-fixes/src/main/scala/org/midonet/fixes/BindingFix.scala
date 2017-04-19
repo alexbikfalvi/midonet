@@ -72,7 +72,8 @@ object BindingFix extends App {
             for (section <- ini.getSections.asScala;
                  key <- ini.getSection(section).getKeys.asScala) {
                 val value = ini.getSection(section).getString(key)
-                config = config.withValue(key, ConfigValueFactory.fromAnyRef(value))
+                config = config.withValue(section + "." + key,
+                                          ConfigValueFactory.fromAnyRef(value))
             }
 
             config
@@ -82,10 +83,9 @@ object BindingFix extends App {
     private final val ErrorCodeConnectionFailed = -1
     private final val ErrorCodeStorageFailed = -2
 
-    private final val MidolmanConfLocation = "/etc/midolman/midolman.conf"
-    private final val MidonetConfLocations = List("~/.midonetrc",
+    private final val MidonetConfLocations = List(".midonetrc",
                                                   "/etc/midonet/midonet.conf",
-                                                  MidolmanConfLocation)
+                                                  "/etc/midolman/midolman.conf")
     private final val DefaultRootKey = "/midonet"
     private final val StorageTimeout = 600 seconds
 
